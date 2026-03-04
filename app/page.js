@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import { 
   Wallet, TrendingDown, TrendingUp, DollarSign, Trash2, Edit2, Plus, 
-  LayoutDashboard, List, Receipt, AlertCircle, Target, BookOpen, Briefcase, Activity, CheckCircle2, AlertTriangle, Calculator, Sparkles, Percent, Palette, Crown, ShoppingCart, Film, Utensils, ShoppingBag, CreditCard, Tv, Youtube, Music, Car, Coffee, Smartphone, Home, Heart, Zap, Coins, ShieldCheck, Calendar
+  LayoutDashboard, List, Receipt, AlertCircle, Target, BookOpen, Briefcase, Activity, CheckCircle2, AlertTriangle, Calculator, Sparkles, Percent, Palette, Crown, ShoppingCart, Film, Utensils, ShoppingBag, CreditCard, Tv, Youtube, Music, Car, Coffee, Smartphone, Home, Heart, Zap, Coins, ShieldCheck, Calendar, LogOut, User, Mail, Lock
 } from "lucide-react";
 
 // Initial mock data
@@ -103,6 +103,80 @@ const PRESET_EXPENSES = [
 ];
 
 export default function FalidaoApp() {
+  // --- Auth State ---
+  const [user, setUser] = useState(null);
+  const [authView, setAuthView] = useState('login'); // 'login' or 'register'
+  const [authForm, setAuthForm] = useState({ name: '', email: '', password: '', gender: 'male' });
+  const [authError, setAuthError] = useState('');
+
+  // Load User from LocalStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('falidao_user');
+    if (savedUser) {
+        try {
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+            if (parsedUser.gender) setUserGender(parsedUser.gender);
+        } catch (e) {
+            console.error("Error loading user", e);
+        }
+    }
+  }, []);
+
+  const handleAuthSubmit = (e) => {
+    e.preventDefault();
+    setAuthError('');
+
+    if (authView === 'login') {
+        // Simulated Login
+        // In a real app, this would verify with backend
+        const storedUser = localStorage.getItem('falidao_user');
+        if (storedUser) {
+            const parsed = JSON.parse(storedUser);
+            if (parsed.email === authForm.email && parsed.password === authForm.password) {
+                setUser(parsed);
+                setUserGender(parsed.gender || 'male');
+            } else {
+                setAuthError('E-mail ou senha incorretos (Simulação: use o mesmo que cadastrou).');
+            }
+        } else {
+             // For demo purposes, allow login if it matches "demo@falidao.com"
+             if (authForm.email === 'demo@falidao.com' && authForm.password === '123456') {
+                 const demoUser = { name: 'Usuário Demo', email: 'demo@falidao.com', gender: 'male' };
+                 setUser(demoUser);
+                 localStorage.setItem('falidao_user', JSON.stringify(demoUser));
+             } else {
+                 setAuthError('Usuário não encontrado. Cadastre-se primeiro.');
+             }
+        }
+    } else {
+        // Register
+        if (!authForm.name || !authForm.email || !authForm.password) {
+            setAuthError('Preencha todos os campos.');
+            return;
+        }
+        
+        const newUser = { 
+            name: authForm.name, 
+            email: authForm.email, 
+            password: authForm.password, // In real app, never store plain password!
+            gender: authForm.gender 
+        };
+        
+        localStorage.setItem('falidao_user', JSON.stringify(newUser));
+        setUser(newUser);
+        setUserGender(newUser.gender);
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setAuthForm({ name: '', email: '', password: '', gender: 'male' });
+    // Optional: clear localStorage if you want to force login every time, 
+    // but usually we want to keep it. 
+    // For this simulation, we keep the data but clear the session state.
+  };
+
   const [salary, setSalary] = useState(3000);
   const [expenses, setExpenses] = useState(INITIAL_EXPENSES);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -769,6 +843,127 @@ export default function FalidaoApp() {
     return null;
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[var(--bg-card)] p-8 rounded-2xl border border-[var(--border-color)] shadow-2xl animate-in fade-in zoom-in duration-500">
+          <div className="flex flex-col items-center mb-8">
+            <div className="p-4 bg-[var(--primary-soft)] rounded-2xl mb-4 shadow-lg shadow-purple-900/20">
+              <Wallet className="w-12 h-12 text-[var(--primary)]" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent mb-2">
+              CLT Rico
+            </h1>
+            <p className="text-[var(--text-secondary)] text-center">
+              Seu caminho para a liberdade financeira começa aqui.
+            </p>
+          </div>
+
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
+            {authError && (
+               <div className="bg-[var(--danger-soft)]/20 border border-[var(--danger)]/50 text-[var(--danger)] p-3 rounded-xl text-sm flex items-center gap-2">
+                   <AlertCircle size={16} />
+                   {authError}
+               </div>
+            )}
+
+            {authView === 'register' && (
+              <div>
+                <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">Nome</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Seu nome"
+                    value={authForm.name}
+                    onChange={(e) => setAuthForm({...authForm, name: e.target.value})}
+                    className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-xl py-3 pl-10 pr-4 outline-none focus:border-[var(--primary)] transition-colors"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">E-mail</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
+                <input
+                  type="email"
+                  required
+                  placeholder="seu@email.com"
+                  value={authForm.email}
+                  onChange={(e) => setAuthForm({...authForm, email: e.target.value})}
+                  className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-xl py-3 pl-10 pr-4 outline-none focus:border-[var(--primary)] transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">Senha</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
+                <input
+                  type="password"
+                  required
+                  placeholder="******"
+                  value={authForm.password}
+                  onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
+                  className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-xl py-3 pl-10 pr-4 outline-none focus:border-[var(--primary)] transition-colors"
+                />
+              </div>
+            </div>
+
+            {authView === 'register' && (
+               <div>
+                   <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2">Gênero (para o Mascote)</label>
+                   <div className="flex gap-4">
+                       <label className={`flex-1 cursor-pointer p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${authForm.gender === 'male' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}>
+                           <input type="radio" name="gender" value="male" checked={authForm.gender === 'male'} onChange={() => setAuthForm({...authForm, gender: 'male'})} className="hidden" />
+                           <span>👨 Masculino</span>
+                       </label>
+                       <label className={`flex-1 cursor-pointer p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${authForm.gender === 'female' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}>
+                           <input type="radio" name="gender" value="female" checked={authForm.gender === 'female'} onChange={() => setAuthForm({...authForm, gender: 'female'})} className="hidden" />
+                           <span>👩 Feminino</span>
+                       </label>
+                   </div>
+               </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-[var(--primary)] hover:opacity-90 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-900/20 transition-all transform active:scale-95"
+            >
+              {authView === 'login' ? 'Entrar' : 'Criar Conta'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-[var(--text-secondary)] text-sm">
+              {authView === 'login' ? 'Ainda não tem conta?' : 'Já tem uma conta?'}
+              <button
+                onClick={() => {
+                    setAuthView(authView === 'login' ? 'register' : 'login');
+                    setAuthError('');
+                }}
+                className="ml-2 text-[var(--primary)] font-bold hover:underline"
+              >
+                {authView === 'login' ? 'Cadastre-se' : 'Faça Login'}
+              </button>
+            </p>
+            {authView === 'login' && (
+                <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
+                    <p className="text-xs text-[var(--text-secondary)] mb-2">Conta de Teste:</p>
+                    <code className="bg-[var(--bg-input)] px-2 py-1 rounded text-xs text-[var(--text-primary)]">demo@falidao.com</code>
+                    <code className="bg-[var(--bg-input)] px-2 py-1 rounded text-xs text-[var(--text-primary)] ml-2">123456</code>
+                </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] p-4 md:p-8 font-sans transition-colors duration-300">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -785,6 +980,19 @@ export default function FalidaoApp() {
           </div>
           
           <div className="flex items-center gap-4">
+            <div className="hidden md:flex flex-col items-end">
+                <span className="text-sm font-bold text-[var(--text-primary)]">{user?.name}</span>
+                <span className="text-xs text-[var(--text-secondary)]">{user?.email}</span>
+            </div>
+            
+            <button 
+                onClick={handleLogout}
+                className="p-3 bg-[var(--bg-input)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] rounded-xl border border-[var(--border-color)] transition-colors"
+                title="Sair"
+            >
+                <LogOut size={20} />
+            </button>
+
             <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)]">
               <span className="text-[var(--text-secondary)] text-sm font-medium pl-2">Salário Mensal:</span>
               <div className="relative">
