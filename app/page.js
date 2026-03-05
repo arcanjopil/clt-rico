@@ -404,8 +404,9 @@ export default function FalidaoApp() {
   const balance = salary - totalFixedDebts - totalExpenses - investmentAmount;
   
   // Progress bar: (Fixed + Variable + Investment) / Salary
-  const progress = Math.min(((totalFixedDebts + totalExpenses + investmentAmount) / salary) * 100, 100);
-  const isOverBudget = (totalFixedDebts + totalExpenses + investmentAmount) > salary;
+  const totalCommitment = totalFixedDebts + totalExpenses + investmentAmount;
+  const progress = salary > 0 ? Math.min((totalCommitment / salary) * 100, 100) : 0;
+  const isOverBudget = salary > 0 && totalCommitment > salary;
 
   // Mascot Logic
   const totalPatrimony = useMemo(() => {
@@ -967,17 +968,19 @@ export default function FalidaoApp() {
                 <LogOut size={20} />
             </button>
 
-            <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)]">
+            <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group">
               <span className="text-[var(--text-secondary)] text-sm font-medium pl-2">Salário Mensal:</span>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">R$</span>
                 <input 
                   type="number" 
-                  value={salary} 
+                  value={salary || ''} 
+                  placeholder="0,00"
                   onChange={(e) => setSalary(Number(e.target.value))}
-                  className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-32 pl-8 py-1 focus:ring-0"
+                  className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-32 pl-8 py-1 focus:ring-0 placeholder-gray-500"
                 />
               </div>
+              <Edit2 size={14} className="text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity mr-2" />
             </div>
 
             {/* Gender Toggle */}
@@ -1186,7 +1189,7 @@ export default function FalidaoApp() {
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium text-[var(--text-secondary)]">Comprometimento da Renda (Dívidas + Gastos + Investimentos)</span>
                   <span className={`text-sm font-bold ${isOverBudget ? "text-[var(--danger)]" : "text-[var(--primary-light)]"}`}>
-                    {Math.round(((totalFixedDebts + totalExpenses + investmentAmount) / salary) * 100)}%
+                    {salary > 0 ? Math.round((totalCommitment / salary) * 100) : 0}%
                   </span>
                 </div>
                 <div className="h-4 bg-[var(--bg-input)] rounded-full overflow-hidden">
