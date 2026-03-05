@@ -180,25 +180,29 @@ export default function FalidaoApp() {
   // Fixed Debts State
   const [newDebt, setNewDebt] = useState({ description: "", amount: "", type: "fixed", monthsRemaining: "", totalMonths: "" });
   const [isAddingDebt, setIsAddingDebt] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false); // Flag to prevent saving before loading
 
   // Load User Data from LocalStorage on mount (and on user change)
   useEffect(() => {
-    if (!user) return; // Only load if logged in
+    if (!user) {
+        setIsDataLoaded(false);
+        return; 
+    }
 
     const savedData = localStorage.getItem(`falidao_data_${user.email}`);
     if (savedData) {
         try {
             const parsedData = JSON.parse(savedData);
-            if (parsedData.salary) setSalary(parsedData.salary);
+            if (parsedData.salary !== undefined) setSalary(parsedData.salary);
             if (parsedData.expenses) setExpenses(parsedData.expenses);
             if (parsedData.fixedDebts) setFixedDebts(parsedData.fixedDebts);
             if (parsedData.portfolio) setPortfolio(parsedData.portfolio);
             if (parsedData.classAllocations) setClassAllocations(parsedData.classAllocations);
-            if (parsedData.investmentGoalPct) setInvestmentGoalPct(parsedData.investmentGoalPct);
+            if (parsedData.investmentGoalPct !== undefined) setInvestmentGoalPct(parsedData.investmentGoalPct);
             if (parsedData.userInvestmentGoal) setUserInvestmentGoal(parsedData.userInvestmentGoal);
-            if (parsedData.emergencyFundPct) setEmergencyFundPct(parsedData.emergencyFundPct);
+            if (parsedData.emergencyFundPct !== undefined) setEmergencyFundPct(parsedData.emergencyFundPct);
             if (parsedData.emergencyMonths) setEmergencyMonths(parsedData.emergencyMonths);
-            if (parsedData.xp) setXp(parsedData.xp);
+            if (parsedData.xp !== undefined) setXp(parsedData.xp);
             if (parsedData.theme) setTheme(parsedData.theme);
         } catch (e) {
             console.error("Error loading user data", e);
@@ -213,11 +217,12 @@ export default function FalidaoApp() {
         setXp(0);
         // ... reset others if needed, though state initializers handle most
     }
+    setIsDataLoaded(true); // Mark as loaded so we can start saving updates
   }, [user]);
 
   // Save User Data to LocalStorage whenever key states change
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isDataLoaded) return; // Wait until data is loaded to avoid overwriting with defaults
 
     const userData = {
         salary,
@@ -234,7 +239,7 @@ export default function FalidaoApp() {
     };
     
     localStorage.setItem(`falidao_data_${user.email}`, JSON.stringify(userData));
-  }, [user, salary, expenses, fixedDebts, portfolio, classAllocations, investmentGoalPct, userInvestmentGoal, emergencyFundPct, emergencyMonths, xp, theme]);
+  }, [user, isDataLoaded, salary, expenses, fixedDebts, portfolio, classAllocations, investmentGoalPct, userInvestmentGoal, emergencyFundPct, emergencyMonths, xp, theme]);
 
   // Investment State
   const [investmentGoalPct, setInvestmentGoalPct] = useState(0);
