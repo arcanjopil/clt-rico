@@ -10,11 +10,7 @@ import {
 } from "lucide-react";
 
 // Initial mock data
-const INITIAL_EXPENSES = [
-  { id: 1, description: "Supermercado", amount: 450.00, category: "Alimentação", date: "2024-03-01" },
-  { id: 2, description: "Uber", amount: 35.90, category: "Transporte", date: "2024-03-02" },
-  { id: 3, description: "Spotify", amount: 21.90, category: "Lazer", date: "2024-03-03" },
-];
+const INITIAL_EXPENSES = [];
 
 const CATEGORIES = [
   "Alimentação", 
@@ -137,17 +133,10 @@ export default function FalidaoApp() {
                 setUser(parsed);
                 setUserGender(parsed.gender || 'male');
             } else {
-                setAuthError('E-mail ou senha incorretos (Simulação: use o mesmo que cadastrou).');
+                setAuthError('E-mail ou senha incorretos.');
             }
         } else {
-             // For demo purposes, allow login if it matches "demo@falidao.com"
-             if (authForm.email === 'demo@falidao.com' && authForm.password === '123456') {
-                 const demoUser = { name: 'Usuário Demo', email: 'demo@falidao.com', gender: 'male' };
-                 setUser(demoUser);
-                 localStorage.setItem('falidao_user', JSON.stringify(demoUser));
-             } else {
-                 setAuthError('Usuário não encontrado. Cadastre-se primeiro.');
-             }
+             setAuthError('Usuário não encontrado. Cadastre-se primeiro.');
         }
     } else {
         // Register
@@ -177,8 +166,8 @@ export default function FalidaoApp() {
     // For this simulation, we keep the data but clear the session state.
   };
 
-  const [salary, setSalary] = useState(3000);
-  const [expenses, setExpenses] = useState(INITIAL_EXPENSES);
+  const [salary, setSalary] = useState(0);
+  const [expenses, setExpenses] = useState([]);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [newExpense, setNewExpense] = useState({ description: "", amount: "", category: "Outros" });
   const [editingId, setEditingId] = useState(null);
@@ -189,10 +178,7 @@ export default function FalidaoApp() {
   const [userGender, setUserGender] = useState('male');
   
   // Fixed Debts State
-  const [fixedDebts, setFixedDebts] = useState([
-    { id: 1, description: "Aluguel / Moradia", amount: 1200.00, type: "fixed" },
-    { id: 2, description: "Financiamento Carro", amount: 650.00, type: "installment", monthsRemaining: 18, totalMonths: 48 },
-  ]);
+  const [fixedDebts, setFixedDebts] = useState([]);
   const [newDebt, setNewDebt] = useState({ description: "", amount: "", type: "fixed", monthsRemaining: "", totalMonths: "" });
   const [isAddingDebt, setIsAddingDebt] = useState(false);
 
@@ -201,17 +187,17 @@ export default function FalidaoApp() {
   }, [theme]);
 
   // Investment State
-  const [investmentGoalPct, setInvestmentGoalPct] = useState(30);
+  const [investmentGoalPct, setInvestmentGoalPct] = useState(0);
   const [userInvestmentGoal, setUserInvestmentGoal] = useState(1000000); // Default 1M Goal
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [emergencyFundPct, setEmergencyFundPct] = useState(5);
   const [emergencyMonths, setEmergencyMonths] = useState(6); // Default 6 months for Emergency Fund
   const [classAllocations, setClassAllocations] = useState({
-    "ETF USA": 40,
-    "FII": 20,
+    "ETF USA": 0,
+    "FII": 0,
     "Ação BR": 0,
-    "Renda Fixa": 30,
-    "Cripto": 10,
+    "Renda Fixa": 0,
+    "Cripto": 0,
     "ETF Brasil": 0,
     "Ação USA": 0,
     "REITs": 0,
@@ -225,12 +211,7 @@ export default function FalidaoApp() {
     "Reserva Valor": 0
   });
   
-  const [portfolio, setPortfolio] = useState([
-    { id: 1, name: "IVVB11", type: "ETF USA", percentage: 100, quantity: 15, currentPrice: 320.50 },
-    { id: 2, name: "MXRF11", type: "FII", percentage: 100, quantity: 250, currentPrice: 10.35 },
-    { id: 3, name: "Tesouro Selic", type: "Renda Fixa", percentage: 100, quantity: 1, currentPrice: 14500.00 },
-    { id: 4, name: "Bitcoin", type: "Cripto", percentage: 100, quantity: 0.005, currentPrice: 350000.00 },
-  ]);
+  const [portfolio, setPortfolio] = useState([]);
   const [currency, setCurrency] = useState('BRL');
   const [exchangeRate, setExchangeRate] = useState(5.00); // Mock exchange rate USD -> BRL
   const [newAsset, setNewAsset] = useState({ name: "", type: "Ação BR", percentage: "", quantity: "", currentPrice: "" });
@@ -571,7 +552,7 @@ export default function FalidaoApp() {
   }, [isOverBudget, balance, totalPatrimony, userInvestmentGoal, userGender]);
 
   // XP & Missions System
-  const [xp, setXp] = useState(1250);
+  const [xp, setXp] = useState(0);
   const [completedMissions, setCompletedMissions] = useState([]);
 
   const MISSIONS = [
@@ -951,13 +932,6 @@ export default function FalidaoApp() {
                 {authView === 'login' ? 'Cadastre-se' : 'Faça Login'}
               </button>
             </p>
-            {authView === 'login' && (
-                <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
-                    <p className="text-xs text-[var(--text-secondary)] mb-2">Conta de Teste:</p>
-                    <code className="bg-[var(--bg-input)] px-2 py-1 rounded text-xs text-[var(--text-primary)]">demo@falidao.com</code>
-                    <code className="bg-[var(--bg-input)] px-2 py-1 rounded text-xs text-[var(--text-primary)] ml-2">123456</code>
-                </div>
-            )}
           </div>
         </div>
       </div>
