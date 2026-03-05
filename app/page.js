@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import { supabase } from '@/lib/supabaseClient';
 
 import { 
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend 
@@ -118,7 +114,7 @@ export default function FalidaoApp() {
         if (session?.user) {
             // Fetch profile data
             const { data: profile } = await supabase
-                .from('profiles')
+                .from('user_data')
                 .select('data')
                 .eq('id', session.user.id)
                 .single();
@@ -145,7 +141,7 @@ export default function FalidaoApp() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (session?.user) {
              const { data: profile } = await supabase
-                .from('profiles')
+                .from('user_data')
                 .select('data')
                 .eq('id', session.user.id)
                 .single();
@@ -228,7 +224,7 @@ export default function FalidaoApp() {
 
     const loadData = async () => {
         const { data: profile } = await supabase
-            .from('profiles')
+            .from('user_data')
             .select('data')
             .eq('id', user.id)
             .single();
@@ -280,7 +276,7 @@ export default function FalidaoApp() {
     // Debounce or just save
     const saveData = async () => {
         await supabase
-            .from('profiles')
+            .from('user_data')
             .upsert({ id: user.id, data: userData, updated_at: new Date() });
     };
 
