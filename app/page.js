@@ -121,8 +121,6 @@ export default function FalidaoApp() {
             
             if (profile?.data) {
                 // If profile exists, use that data
-                // We'll merge it in the main loader logic
-                // For now just set user to trigger the other effect
                 const userData = profile.data;
                 // Add email from session since it's not in data usually
                 setUser({ ...userData, email: session.user.email, id: session.user.id });
@@ -208,30 +206,42 @@ export default function FalidaoApp() {
   const [userGender, setUserGender] = useState('male');
   
   // Fixed Debts State
+  const [fixedDebts, setFixedDebts] = useState([]); // Fixed: Added missing state initialization
   const [newDebt, setNewDebt] = useState({ description: "", amount: "", type: "fixed", monthsRemaining: "", totalMonths: "" });
   const [isAddingDebt, setIsAddingDebt] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false); // Flag to prevent saving before loading
+  const [savingStatus, setSavingStatus] = useState('idle'); // idle, saving, saved, error
 
   // Load User Data from Supabase (instead of localStorage)
   useEffect(() => {
-    if (!user) {
+    if (!user || !user.id) {
         setIsDataLoaded(false);
         return; 
     }
 
-    // Only load if it's a real user ID (not null/undefined)
-    if (!user.id) return;
-
     const loadData = async () => {
-        const { data: profile } = await supabase
+        console.log("Loading data for user:", user.id);
+        const { data: profile, error } = await supabase
             .from('user_data')
             .select('data')
             .eq('id', user.id)
             .single();
 
+        if (error) {
+            // PGRST116 means no row found (new user), which is fine.
+            // Other errors (network, auth) should block loading to prevent overwriting data.
+            if (error.code !== 'PGRST116') {
+                console.error("Error fetching user data from Supabase:", error);
+                setSavingStatus('error');
+                return; 
+            }
+            console.log("No existing data found, starting fresh.");
+        }
+
         if (profile?.data) {
             try {
                 const parsedData = profile.data;
+                // Carefully set state only if properties exist
                 if (parsedData.salary !== undefined) setSalary(parsedData.salary);
                 if (parsedData.expenses) setExpenses(parsedData.expenses);
                 if (parsedData.fixedDebts) setFixedDebts(parsedData.fixedDebts);
@@ -243,8 +253,10 @@ export default function FalidaoApp() {
                 if (parsedData.emergencyMonths) setEmergencyMonths(parsedData.emergencyMonths);
                 if (parsedData.xp !== undefined) setXp(parsedData.xp);
                 if (parsedData.theme) setTheme(parsedData.theme);
+                if (parsedData.gender) setUserGender(parsedData.gender);
+                console.log("User data loaded successfully from Supabase");
             } catch (e) {
-                console.error("Error loading user data", e);
+                console.error("Error parsing user data", e);
             }
         }
         
@@ -256,6 +268,7 @@ export default function FalidaoApp() {
 
   // Save User Data to Supabase whenever key states change
   useEffect(() => {
+    // STRICT CHECK: Do not save if data hasn't been loaded yet
     if (!user || !isDataLoaded || !user.id) return;
 
     const userData = {
@@ -270,17 +283,32 @@ export default function FalidaoApp() {
         emergencyMonths,
         xp,
         theme,
-        gender: userGender // Save gender in profile too
+        gender: userGender
     };
     
-    // Debounce or just save
-    const saveData = async () => {
-        await supabase
+    // Debounce the save operation to avoid too many requests
+    const timeoutId = setTimeout(async () => {
+        setSavingStatus('saving');
+        console.log("Saving data to Supabase...");
+        
+        const { error } = await supabase
             .from('user_data')
             .upsert({ id: user.id, data: userData, updated_at: new Date() });
-    };
+            
+        if (error) {
+            console.error("Error saving data to Supabase:", error);
+            setSavingStatus('error');
+        } else {
+            console.log("Data saved successfully!");
+            setSavingStatus('saved');
+            // Reset status after a delay
+            setTimeout(() => {
+                setSavingStatus(prev => prev === 'saved' ? 'idle' : prev);
+            }, 3000);
+        }
+    }, 1000); // 1 second debounce
 
-    saveData();
+    return () => clearTimeout(timeoutId);
   }, [user, isDataLoaded, salary, expenses, fixedDebts, portfolio, classAllocations, investmentGoalPct, userInvestmentGoal, emergencyFundPct, emergencyMonths, xp, theme, userGender]);
 
   // Investment State
@@ -792,6 +820,14 @@ export default function FalidaoApp() {
   }, [simYears, weightedAverageRate, weightedAverageYield, simMonthly]);
 
   // Handlers
+  const handleCloseMonth = () => {
+    if (window.confirm("Tem certeza que deseja fechar o mês? Isso apagará todos os gastos variáveis (lista de compras, lazer, etc), mas manterá seu salário, investimentos e dívidas fixas.")) {
+        setExpenses([]);
+        // Force save immediately or let useEffect handle it (it will handle it)
+        alert("Mês fechado com sucesso! Seus gastos variáveis foram zerados.");
+    }
+  };
+
   const handleAddDebt = (e) => {
     e.preventDefault();
     if (!newDebt.description || !newDebt.amount) return;
@@ -1052,6 +1088,28 @@ export default function FalidaoApp() {
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Saving Indicator */}
+            <div className="hidden md:flex items-center gap-2 mr-2">
+                {savingStatus === 'saving' && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] animate-pulse">
+                        <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
+                        Salvando...
+                    </span>
+                )}
+                {savingStatus === 'saved' && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-[var(--success)] animate-in fade-in slide-in-from-bottom-1">
+                        <CheckCircle2 size={12} />
+                        Salvo
+                    </span>
+                )}
+                {savingStatus === 'error' && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-[var(--danger)]">
+                        <AlertTriangle size={12} />
+                        Erro ao salvar
+                    </span>
+                )}
+            </div>
+
             <div className="hidden md:flex flex-col items-end">
                 <span className="text-sm font-bold text-[var(--text-primary)]">{user?.name}</span>
                 <span className="text-xs text-[var(--text-secondary)]">{user?.email}</span>
@@ -1258,8 +1316,19 @@ export default function FalidaoApp() {
                   <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                     <TrendingDown size={64} className="text-[var(--danger)]" />
                   </div>
-                  <p className="text-[var(--text-secondary)] text-sm mb-1">Gastos Variáveis</p>
-                  <h3 className="text-2xl font-bold text-[var(--danger)]">{formatCurrency(totalExpenses)}</h3>
+                  <div className="flex justify-between items-start">
+                    <div>
+                        <p className="text-[var(--text-secondary)] text-sm mb-1">Gastos Variáveis</p>
+                        <h3 className="text-2xl font-bold text-[var(--danger)]">{formatCurrency(totalExpenses)}</h3>
+                    </div>
+                    <button 
+                        onClick={handleCloseMonth}
+                        className="text-xs bg-[var(--danger-soft)] hover:bg-[var(--danger)] hover:text-white text-[var(--danger)] px-2 py-1 rounded border border-[var(--danger)]/30 transition-all z-10"
+                        title="Zerar gastos variáveis para iniciar novo mês"
+                    >
+                        Fechar Mês
+                    </button>
+                  </div>
                 </div>
 
                 <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--primary)] transition-colors">
