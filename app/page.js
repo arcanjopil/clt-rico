@@ -171,20 +171,70 @@ export default function FalidaoApp() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [newExpense, setNewExpense] = useState({ description: "", amount: "", category: "Outros" });
   const [editingId, setEditingId] = useState(null);
-  
+
   // Theme State
   const [theme, setTheme] = useState('default');
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [userGender, setUserGender] = useState('male');
   
   // Fixed Debts State
-  const [fixedDebts, setFixedDebts] = useState([]);
   const [newDebt, setNewDebt] = useState({ description: "", amount: "", type: "fixed", monthsRemaining: "", totalMonths: "" });
   const [isAddingDebt, setIsAddingDebt] = useState(false);
 
+  // Load User Data from LocalStorage on mount (and on user change)
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    if (!user) return; // Only load if logged in
+
+    const savedData = localStorage.getItem(`falidao_data_${user.email}`);
+    if (savedData) {
+        try {
+            const parsedData = JSON.parse(savedData);
+            if (parsedData.salary) setSalary(parsedData.salary);
+            if (parsedData.expenses) setExpenses(parsedData.expenses);
+            if (parsedData.fixedDebts) setFixedDebts(parsedData.fixedDebts);
+            if (parsedData.portfolio) setPortfolio(parsedData.portfolio);
+            if (parsedData.classAllocations) setClassAllocations(parsedData.classAllocations);
+            if (parsedData.investmentGoalPct) setInvestmentGoalPct(parsedData.investmentGoalPct);
+            if (parsedData.userInvestmentGoal) setUserInvestmentGoal(parsedData.userInvestmentGoal);
+            if (parsedData.emergencyFundPct) setEmergencyFundPct(parsedData.emergencyFundPct);
+            if (parsedData.emergencyMonths) setEmergencyMonths(parsedData.emergencyMonths);
+            if (parsedData.xp) setXp(parsedData.xp);
+            if (parsedData.theme) setTheme(parsedData.theme);
+        } catch (e) {
+            console.error("Error loading user data", e);
+        }
+    } else {
+        // Reset to defaults if no data found for this user (Fresh Start)
+        setSalary(0);
+        setExpenses([]);
+        setFixedDebts([]);
+        setPortfolio([]);
+        setInvestmentGoalPct(0);
+        setXp(0);
+        // ... reset others if needed, though state initializers handle most
+    }
+  }, [user]);
+
+  // Save User Data to LocalStorage whenever key states change
+  useEffect(() => {
+    if (!user) return;
+
+    const userData = {
+        salary,
+        expenses,
+        fixedDebts,
+        portfolio,
+        classAllocations,
+        investmentGoalPct,
+        userInvestmentGoal,
+        emergencyFundPct,
+        emergencyMonths,
+        xp,
+        theme
+    };
+    
+    localStorage.setItem(`falidao_data_${user.email}`, JSON.stringify(userData));
+  }, [user, salary, expenses, fixedDebts, portfolio, classAllocations, investmentGoalPct, userInvestmentGoal, emergencyFundPct, emergencyMonths, xp, theme]);
 
   // Investment State
   const [investmentGoalPct, setInvestmentGoalPct] = useState(0);
