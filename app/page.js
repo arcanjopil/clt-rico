@@ -1,6 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
 import { 
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend 
 } from "recharts";
@@ -105,65 +111,93 @@ export default function FalidaoApp() {
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '', gender: 'male' });
   const [authError, setAuthError] = useState('');
 
-  // Load User from LocalStorage on mount
+  // Load User from Supabase (instead of localStorage)
   useEffect(() => {
-    const savedUser = localStorage.getItem('falidao_user');
-    if (savedUser) {
-        try {
-            const parsedUser = JSON.parse(savedUser);
-            setUser(parsedUser);
-            if (parsedUser.gender) setUserGender(parsedUser.gender);
-        } catch (e) {
-            console.error("Error loading user", e);
+    const checkSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            // Fetch profile data
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('data')
+                .eq('id', session.user.id)
+                .single();
+            
+            if (profile?.data) {
+                // If profile exists, use that data
+                // We'll merge it in the main loader logic
+                // For now just set user to trigger the other effect
+                const userData = profile.data;
+                // Add email from session since it's not in data usually
+                setUser({ ...userData, email: session.user.email, id: session.user.id });
+                // Also set Gender from profile if saved there
+                if (userData.gender) setUserGender(userData.gender);
+            } else {
+                // New user via Supabase
+                setUser({ email: session.user.email, id: session.user.id, name: session.user.user_metadata?.name || 'Usuário' });
+            }
         }
-    }
+    };
+    
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+             const { data: profile } = await supabase
+                .from('profiles')
+                .select('data')
+                .eq('id', session.user.id)
+                .single();
+             
+             if (profile?.data) {
+                 const userData = profile.data;
+                 setUser({ ...userData, email: session.user.email, id: session.user.id });
+                 if (userData.gender) setUserGender(userData.gender);
+             } else {
+                 setUser({ email: session.user.email, id: session.user.id, name: session.user.user_metadata?.name || 'Usuário' });
+             }
+        } else {
+            setUser(null);
+        }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleAuthSubmit = (e) => {
+  const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
 
     if (authView === 'login') {
-        // Simulated Login
-        // In a real app, this would verify with backend
-        const storedUser = localStorage.getItem('falidao_user');
-        if (storedUser) {
-            const parsed = JSON.parse(storedUser);
-            if (parsed.email === authForm.email && parsed.password === authForm.password) {
-                setUser(parsed);
-                setUserGender(parsed.gender || 'male');
-            } else {
-                setAuthError('E-mail ou senha incorretos.');
-            }
-        } else {
-             setAuthError('Usuário não encontrado. Cadastre-se primeiro.');
-        }
+        const { error } = await supabase.auth.signInWithPassword({
+            email: authForm.email,
+            password: authForm.password,
+        });
+        if (error) setAuthError(error.message);
     } else {
-        // Register
-        if (!authForm.name || !authForm.email || !authForm.password) {
-            setAuthError('Preencha todos os campos.');
-            return;
+        const { error } = await supabase.auth.signUp({
+            email: authForm.email,
+            password: authForm.password,
+            options: {
+                data: {
+                    name: authForm.name,
+                    gender: authForm.gender
+                }
+            }
+        });
+        if (error) setAuthError(error.message);
+        else if (authView === 'register') {
+             // Optional: Show check email message
+             alert("Verifique seu e-mail para confirmar o cadastro!");
         }
-        
-        const newUser = { 
-            name: authForm.name, 
-            email: authForm.email, 
-            password: authForm.password, // In real app, never store plain password!
-            gender: authForm.gender 
-        };
-        
-        localStorage.setItem('falidao_user', JSON.stringify(newUser));
-        setUser(newUser);
-        setUserGender(newUser.gender);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setAuthForm({ name: '', email: '', password: '', gender: 'male' });
-    // Optional: clear localStorage if you want to force login every time, 
-    // but usually we want to keep it. 
-    // For this simulation, we keep the data but clear the session state.
   };
 
   const [salary, setSalary] = useState(0);
@@ -182,40 +216,51 @@ export default function FalidaoApp() {
   const [isAddingDebt, setIsAddingDebt] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false); // Flag to prevent saving before loading
 
-  // Load User Data from LocalStorage on mount (and on user change)
+  // Load User Data from Supabase (instead of localStorage)
   useEffect(() => {
     if (!user) {
         setIsDataLoaded(false);
         return; 
     }
 
-    const savedData = localStorage.getItem(`falidao_data_${user.email}`);
-    if (savedData) {
-        try {
-            const parsedData = JSON.parse(savedData);
-            // Only set state if the parsed data actually has the key
-            if (Object.prototype.hasOwnProperty.call(parsedData, 'salary')) setSalary(parsedData.salary);
-            if (parsedData.expenses) setExpenses(parsedData.expenses);
-            if (parsedData.fixedDebts) setFixedDebts(parsedData.fixedDebts);
-            if (parsedData.portfolio) setPortfolio(parsedData.portfolio);
-            if (parsedData.classAllocations) setClassAllocations(parsedData.classAllocations);
-            if (parsedData.investmentGoalPct !== undefined) setInvestmentGoalPct(parsedData.investmentGoalPct);
-            if (parsedData.userInvestmentGoal) setUserInvestmentGoal(parsedData.userInvestmentGoal);
-            if (parsedData.emergencyFundPct !== undefined) setEmergencyFundPct(parsedData.emergencyFundPct);
-            if (parsedData.emergencyMonths) setEmergencyMonths(parsedData.emergencyMonths);
-            if (parsedData.xp !== undefined) setXp(parsedData.xp);
-            if (parsedData.theme) setTheme(parsedData.theme);
-        } catch (e) {
-            console.error("Error loading user data", e);
+    // Only load if it's a real user ID (not null/undefined)
+    if (!user.id) return;
+
+    const loadData = async () => {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('data')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.data) {
+            try {
+                const parsedData = profile.data;
+                if (parsedData.salary !== undefined) setSalary(parsedData.salary);
+                if (parsedData.expenses) setExpenses(parsedData.expenses);
+                if (parsedData.fixedDebts) setFixedDebts(parsedData.fixedDebts);
+                if (parsedData.portfolio) setPortfolio(parsedData.portfolio);
+                if (parsedData.classAllocations) setClassAllocations(parsedData.classAllocations);
+                if (parsedData.investmentGoalPct !== undefined) setInvestmentGoalPct(parsedData.investmentGoalPct);
+                if (parsedData.userInvestmentGoal) setUserInvestmentGoal(parsedData.userInvestmentGoal);
+                if (parsedData.emergencyFundPct !== undefined) setEmergencyFundPct(parsedData.emergencyFundPct);
+                if (parsedData.emergencyMonths) setEmergencyMonths(parsedData.emergencyMonths);
+                if (parsedData.xp !== undefined) setXp(parsedData.xp);
+                if (parsedData.theme) setTheme(parsedData.theme);
+            } catch (e) {
+                console.error("Error loading user data", e);
+            }
         }
-    }
-    
-    setIsDataLoaded(true); 
+        
+        setIsDataLoaded(true); 
+    };
+
+    loadData();
   }, [user]);
 
-  // Save User Data to LocalStorage whenever key states change
+  // Save User Data to Supabase whenever key states change
   useEffect(() => {
-    if (!user || !isDataLoaded) return; // Wait until data is loaded to avoid overwriting with defaults
+    if (!user || !isDataLoaded || !user.id) return;
 
     const userData = {
         salary,
@@ -228,13 +273,19 @@ export default function FalidaoApp() {
         emergencyFundPct,
         emergencyMonths,
         xp,
-        theme
+        theme,
+        gender: userGender // Save gender in profile too
     };
     
-    // Debug log to verify saving
-    // console.log("Saving user data:", userData); 
-    localStorage.setItem(`falidao_data_${user.email}`, JSON.stringify(userData));
-  }, [user, isDataLoaded, salary, expenses, fixedDebts, portfolio, classAllocations, investmentGoalPct, userInvestmentGoal, emergencyFundPct, emergencyMonths, xp, theme]);
+    // Debounce or just save
+    const saveData = async () => {
+        await supabase
+            .from('profiles')
+            .upsert({ id: user.id, data: userData, updated_at: new Date() });
+    };
+
+    saveData();
+  }, [user, isDataLoaded, salary, expenses, fixedDebts, portfolio, classAllocations, investmentGoalPct, userInvestmentGoal, emergencyFundPct, emergencyMonths, xp, theme, userGender]);
 
   // Investment State
   const [investmentGoalPct, setInvestmentGoalPct] = useState(0);
