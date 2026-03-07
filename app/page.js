@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { 
   Wallet, TrendingDown, TrendingUp, DollarSign, Trash2, Edit2, Plus, 
-  LayoutDashboard, List, Receipt, AlertCircle, Target, BookOpen, Briefcase, Activity, CheckCircle2, AlertTriangle, Calculator, Sparkles, Percent, Palette, Crown, ShoppingCart, Film, Utensils, ShoppingBag, CreditCard, Tv, Youtube, Music, Car, Coffee, Smartphone, Home, Heart, Zap, Coins, ShieldCheck, Calendar, LogOut, User, Mail, Lock
+  LayoutDashboard, List, Receipt, AlertCircle, Target, BookOpen, Briefcase, Activity, CheckCircle2, AlertTriangle, Calculator, Sparkles, Percent, Palette, Crown, ShoppingCart, Film, Utensils, ShoppingBag, CreditCard, Tv, Youtube, Music, Car, Coffee, Smartphone, Home, Heart, Zap, Coins, ShieldCheck, Calendar, LogOut, User, Mail, Lock, Loader2
 } from "lucide-react";
 
 // Initial mock data
@@ -101,13 +101,69 @@ const PRESET_EXPENSES = [
 ];
 
 export default function FalidaoApp() {
-  // --- Auth State ---
+  // --- STATE DEFINITIONS (Must be at top) ---
+
+  // 1. Auth State
   const [user, setUser] = useState(null);
   const [authView, setAuthView] = useState('login'); // 'login' or 'register'
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '', gender: 'male' });
   const [authError, setAuthError] = useState('');
+  const [authSuccess, setAuthSuccess] = useState('');
+  const [isAuthLoading, setIsAuthLoading] = useState(false); // Loading state for auth actions
 
-  // Load User from Supabase (instead of localStorage)
+  // 2. General App State
+  // Initialize with safe defaults
+  const [salary, setSalary] = useState(0);
+  const [expenses, setExpenses] = useState([]);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [newExpense, setNewExpense] = useState({ description: "", amount: "", category: "Outros" });
+  const [editingId, setEditingId] = useState(null);
+  const [theme, setTheme] = useState('default');
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [userGender, setUserGender] = useState('male');
+  const [isDataLoaded, setIsDataLoaded] = useState(false); // Flag to prevent saving before loading
+  const [savingStatus, setSavingStatus] = useState('idle'); // idle, saving, saved, error
+
+  // 3. Fixed Debts State
+  const [fixedDebts, setFixedDebts] = useState([]);
+  const [newDebt, setNewDebt] = useState({ description: "", amount: "", type: "fixed", monthsRemaining: "", totalMonths: "" });
+  const [isAddingDebt, setIsAddingDebt] = useState(false);
+
+  // 4. Investment State
+  const [investmentGoalPct, setInvestmentGoalPct] = useState(0);
+  const [userInvestmentGoal, setUserInvestmentGoal] = useState(1000000); // Default 1M Goal
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [emergencyFundPct, setEmergencyFundPct] = useState(5);
+  const [emergencyMonths, setEmergencyMonths] = useState(6); // Default 6 months for Emergency Fund
+  const [classAllocations, setClassAllocations] = useState({
+    "ETF USA": 0, "Ação USA": 0, "REITs": 0,
+    "ETF Brasil": 0, "Ação BR": 0, "FII": 0,
+    "Renda Fixa": 0, "Tesouro Direto": 0, "CDB/LCI/LCA": 0, "Debêntures": 0,
+    "Fundos de Inv.": 0, "Previdência": 0,
+    "Cripto": 0, "Ouro/Prata": 0, "Crowdfunding": 0, "Reserva Valor": 0
+  });
+  const [portfolio, setPortfolio] = useState([]);
+  const [currency, setCurrency] = useState('BRL');
+  const [exchangeRate, setExchangeRate] = useState(5.00); // Mock exchange rate USD -> BRL
+  const [newAsset, setNewAsset] = useState({ name: "", type: "Ação BR", percentage: "", quantity: "", currentPrice: "" });
+
+  // 5. Simulation State
+  const [simYears, setSimYears] = useState(10);
+  const [simMonthly, setSimMonthly] = useState(500);
+  const [showIncomeChart, setShowIncomeChart] = useState(false);
+
+  // 6. Rebalancing State
+  const [manualContribution, setManualContribution] = useState("");
+  const [rebalanceResult, setRebalanceResult] = useState(null);
+  const [selectedClassesForRebalance, setSelectedClassesForRebalance] = useState(ASSET_CLASSES);
+
+  // 7. XP & Missions State
+  const [xp, setXp] = useState(0);
+  // Removed completedMissions redeclaration from here, it was moved after MISSIONS useMemo
+
+  // --- EFFECTS ---
+
+  // 1. Auth Check Effect
   useEffect(() => {
     const checkSession = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -137,12 +193,17 @@ export default function FalidaoApp() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log("Auth Event:", event);
+        if (event === 'PASSWORD_RECOVERY') {
+            setAuthView('update_password');
+        }
+
         if (session?.user) {
              const { data: profile } = await supabase
                 .from('user_data')
                 .select('data')
-                .eq('id', session.user.id)
-                .single();
+                .eq('user_id', session.user.id)
+                .maybeSingle();
              
              if (profile?.data) {
                  const userData = profile.data;
@@ -153,38 +214,266 @@ export default function FalidaoApp() {
              }
         } else {
             setUser(null);
+            if (event !== 'PASSWORD_RECOVERY') {
+                // Keep showing update password form if we are in recovery mode but session not fully established yet or just established
+            }
         }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+    // 2. Load User Data Effect
+    useEffect(() => {
+    // If no user, reset data loaded flag
+    if (!user || !user.id) {
+        setIsDataLoaded(false);
+        return;
+    }
+
+    const loadData = async () => {
+        console.log("Carregando dados do usuário...");
+        
+        try {
+            // Check if we have data by user_id
+            const { data: profile, error } = await supabase
+                .from('user_data')
+                .select('data')
+                .eq('user_id', user.id)
+                .maybeSingle();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error("Erro ao carregar dados do Supabase:", error);
+                return;
+            }
+
+            if (!profile) {
+                console.log("Nenhum dado encontrado. Criando novo registro...");
+                
+                const initialData = {
+                    salary: 0,
+                    expenses: [],
+                    fixedDebts: [],
+                    portfolio: [],
+                    classAllocations: {
+                        "ETF USA": 0, "FII": 0, "Ação BR": 0, "Renda Fixa": 0, "Cripto": 0,
+                        "ETF Brasil": 0, "Ação USA": 0, "REITs": 0, "Tesouro Direto": 0,
+                        "CDB/LCI/LCA": 0, "Debêntures": 0, "Fundos de Inv.": 0,
+                        "Previdência": 0, "Ouro/Prata": 0, "Crowdfunding": 0, "Reserva Valor": 0
+                    },
+                    investmentGoalPct: 0,
+                    userInvestmentGoal: 1000000,
+                    emergencyFundPct: 5,
+                    emergencyMonths: 6,
+                    xp: 0,
+                    theme: 'default',
+                    gender: 'male'
+                };
+
+                // Create new record with user_id
+                // Use upsert to be safe against race conditions
+                const { error: insertError } = await supabase
+                    .from('user_data')
+                    .upsert(
+                        { user_id: user.id, data: initialData, updated_at: new Date() },
+                        { onConflict: 'user_id' }
+                    );
+
+                if (insertError) {
+                    console.error("Erro ao criar registro inicial:", insertError);
+                } else {
+                    console.log("Registro inicial criado com sucesso.");
+                    setIsDataLoaded(true);
+                }
+                return;
+            }
+
+            if (profile?.data) {
+                console.log("Dados carregados:", JSON.stringify(profile.data));
+                const loadedData = profile.data;
+
+                // Use nullish coalescing to fallback to default empty values if DB has nulls
+                // But wait, our state expects null as "not loaded".
+                // We should set to loadedData value OR empty structure if undefined in loadedData
+                
+                setSalary(loadedData.salary !== undefined ? loadedData.salary : 0);
+                setExpenses(loadedData.expenses || []);
+                setFixedDebts(loadedData.fixedDebts || []);
+                setPortfolio(loadedData.portfolio || []);
+                setClassAllocations(loadedData.classAllocations || {
+                        "ETF USA": 0, "FII": 0, "Ação BR": 0, "Renda Fixa": 0, "Cripto": 0,
+                        "ETF Brasil": 0, "Ação USA": 0, "REITs": 0, "Tesouro Direto": 0,
+                        "CDB/LCI/LCA": 0, "Debêntures": 0, "Fundos de Inv.": 0,
+                        "Previdência": 0, "Ouro/Prata": 0, "Crowdfunding": 0, "Reserva Valor": 0
+                    });
+                setInvestmentGoalPct(loadedData.investmentGoalPct !== undefined ? loadedData.investmentGoalPct : 0);
+                setUserInvestmentGoal(loadedData.userInvestmentGoal || 1000000);
+                setEmergencyFundPct(loadedData.emergencyFundPct !== undefined ? loadedData.emergencyFundPct : 5);
+                setEmergencyMonths(loadedData.emergencyMonths || 6);
+                setXp(loadedData.xp !== undefined ? loadedData.xp : 0);
+                setTheme(loadedData.theme || 'default');
+                setUserGender(loadedData.gender || 'male');
+
+                setIsDataLoaded(true);
+            }
+        } catch (e) {
+            console.error("Exceção ao carregar dados:", e);
+        }
+    };
+
+    loadData();
+  }, [user]);
+
+  // 3. Save User Data Effect
+  useEffect(() => {
+    // CRITICAL: Check isDataLoaded to prevent overwriting with empty state
+    if (!user || !user.id || !isDataLoaded) return;
+
+    // EXTRA SAFETY: Do not save if critical state is null (not yet initialized)
+    if (salary === null || expenses === null || fixedDebts === null || portfolio === null) {
+        console.warn("Tentativa de salvar abortada: Estado ainda não inicializado.");
+        return;
+    }
+
+    const saveData = async () => {
+        setSavingStatus('saving');
+        console.log("Salvando dados...");
+
+        const userData = {
+            salary: salary || 0,
+            expenses: expenses || [],
+            fixedDebts: fixedDebts || [],
+            portfolio: portfolio || [],
+            classAllocations: classAllocations || {},
+            investmentGoalPct: investmentGoalPct || 0,
+            userInvestmentGoal: userInvestmentGoal || 1000000,
+            emergencyFundPct: emergencyFundPct || 5,
+            emergencyMonths: emergencyMonths || 6,
+            xp: xp || 0,
+            theme: theme || 'default',
+            gender: userGender || 'male'
+        };
+
+        try {
+            // Use upsert with user_id as unique key
+            const { error } = await supabase
+                .from('user_data')
+                .upsert(
+                    { user_id: user.id, data: userData, updated_at: new Date() },
+                    { onConflict: 'user_id' }
+                );
+
+            if (error) {
+                console.error("ERRO ao salvar dados:", error);
+                setSavingStatus('error');
+            } else {
+                console.log("Dados salvos com sucesso");
+                setSavingStatus('saved');
+                setTimeout(() => setSavingStatus('idle'), 3000);
+            }
+        } catch (e) {
+            console.error("Exceção ao salvar dados:", e);
+            setSavingStatus('error');
+        }
+    };
+
+    const timeoutId = setTimeout(saveData, 1000); // 1 second debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    user, 
+    isDataLoaded, 
+    salary, 
+    expenses, 
+    fixedDebts, 
+    portfolio, 
+    classAllocations, 
+    investmentGoalPct, 
+    userInvestmentGoal, 
+    emergencyFundPct, 
+    emergencyMonths, 
+    xp, 
+    theme, 
+    userGender
+  ]);
+
+  // 4. Missions Effect - State only
+  const [completedMissions, setCompletedMissions] = useState([]);
+
+
+  // --- HELPERS & HANDLERS ---
+
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
+    setAuthSuccess('');
+    setIsAuthLoading(true);
 
-    if (authView === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
-            email: authForm.email,
-            password: authForm.password,
-        });
-        if (error) setAuthError(error.message);
-    } else {
-        const { error } = await supabase.auth.signUp({
-            email: authForm.email,
-            password: authForm.password,
-            options: {
-                data: {
-                    name: authForm.name,
-                    gender: authForm.gender
-                }
+    try {
+        // Create a timeout promise to race against auth calls
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Tempo limite excedido. Verifique sua conexão ou tente novamente.')), 15000)
+        );
+
+        if (authView === 'login') {
+            const { error } = await Promise.race([
+                supabase.auth.signInWithPassword({
+                    email: authForm.email,
+                    password: authForm.password,
+                }),
+                timeoutPromise
+            ]);
+            if (error) throw error;
+        } else if (authView === 'register') {
+            const { error } = await Promise.race([
+                supabase.auth.signUp({
+                    email: authForm.email,
+                    password: authForm.password,
+                    options: {
+                        data: {
+                            name: authForm.name,
+                            gender: authForm.gender
+                        }
+                    }
+                }),
+                timeoutPromise
+            ]);
+            if (error) throw error;
+            
+            // Check if session exists (auto-login) or if email confirm is needed
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                setAuthSuccess("Cadastro realizado! Verifique seu e-mail para confirmar antes de entrar.");
+                setAuthView('login');
             }
-        });
-        if (error) setAuthError(error.message);
-        else if (authView === 'register') {
-             // Optional: Show check email message
-             alert("Verifique seu e-mail para confirmar o cadastro!");
+        } else if (authView === 'forgot') {
+            const { error } = await Promise.race([
+                supabase.auth.resetPasswordForEmail(authForm.email, {
+                    redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+                }),
+                timeoutPromise
+            ]);
+            if (error) throw error;
+            setAuthSuccess("Instruções de recuperação enviadas para seu e-mail!");
+        } else if (authView === 'update_password') {
+            const { error } = await Promise.race([
+                supabase.auth.updateUser({ password: authForm.password }),
+                timeoutPromise
+            ]);
+            if (error) throw error;
+            setAuthSuccess("Senha atualizada com sucesso! Você já está logado.");
+            setTimeout(() => setAuthView('login'), 2000); 
         }
+    } catch (error) {
+        console.error("Auth error:", error);
+        let msg = error.message;
+        if (msg.includes('Invalid login credentials')) msg = 'E-mail ou senha incorretos.';
+        else if (msg.includes('Email not confirmed')) msg = 'E-mail não confirmado. Verifique sua caixa de entrada.';
+        else if (msg.includes('User already registered')) msg = 'Este e-mail já está cadastrado.';
+        else if (msg.includes('rate limit')) msg = 'Muitas tentativas. Tente novamente mais tarde.';
+        setAuthError(msg);
+    } finally {
+        setIsAuthLoading(false);
     }
   };
 
@@ -192,166 +481,14 @@ export default function FalidaoApp() {
     await supabase.auth.signOut();
     setUser(null);
     setAuthForm({ name: '', email: '', password: '', gender: 'male' });
+    setAuthView('login');
+    setAuthError('');
+    setAuthSuccess('');
   };
-
-  const [salary, setSalary] = useState(0);
-  const [expenses, setExpenses] = useState([]);
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [newExpense, setNewExpense] = useState({ description: "", amount: "", category: "Outros" });
-  const [editingId, setEditingId] = useState(null);
-
-  // Theme State
-  const [theme, setTheme] = useState('default');
-  const [showThemeMenu, setShowThemeMenu] = useState(false);
-  const [userGender, setUserGender] = useState('male');
-  
-  // Fixed Debts State
-  const [fixedDebts, setFixedDebts] = useState([]); // Fixed: Added missing state initialization
-  const [newDebt, setNewDebt] = useState({ description: "", amount: "", type: "fixed", monthsRemaining: "", totalMonths: "" });
-  const [isAddingDebt, setIsAddingDebt] = useState(false);
-  const [isDataLoaded, setIsDataLoaded] = useState(false); // Flag to prevent saving before loading
-  const [savingStatus, setSavingStatus] = useState('idle'); // idle, saving, saved, error
-
-  // Load User Data from Supabase (instead of localStorage)
-  useEffect(() => {
-    if (!user || !user.id) {
-        setIsDataLoaded(false);
-        return; 
-    }
-
-    const loadData = async () => {
-        console.log("Loading data for user:", user.id);
-        const { data: profile, error } = await supabase
-            .from('user_data')
-            .select('data')
-            .eq('id', user.id)
-            .single();
-
-        if (error) {
-            // PGRST116 means no row found (new user), which is fine.
-            // Other errors (network, auth) should block loading to prevent overwriting data.
-            if (error.code !== 'PGRST116') {
-                console.error("Error fetching user data from Supabase:", error);
-                setSavingStatus('error');
-                return; 
-            }
-            console.log("No existing data found, starting fresh.");
-        }
-
-        if (profile?.data) {
-            try {
-                const parsedData = profile.data;
-                // Carefully set state only if properties exist
-                if (parsedData.salary !== undefined) setSalary(parsedData.salary);
-                if (parsedData.expenses) setExpenses(parsedData.expenses);
-                if (parsedData.fixedDebts) setFixedDebts(parsedData.fixedDebts);
-                if (parsedData.portfolio) setPortfolio(parsedData.portfolio);
-                if (parsedData.classAllocations) setClassAllocations(parsedData.classAllocations);
-                if (parsedData.investmentGoalPct !== undefined) setInvestmentGoalPct(parsedData.investmentGoalPct);
-                if (parsedData.userInvestmentGoal) setUserInvestmentGoal(parsedData.userInvestmentGoal);
-                if (parsedData.emergencyFundPct !== undefined) setEmergencyFundPct(parsedData.emergencyFundPct);
-                if (parsedData.emergencyMonths) setEmergencyMonths(parsedData.emergencyMonths);
-                if (parsedData.xp !== undefined) setXp(parsedData.xp);
-                if (parsedData.theme) setTheme(parsedData.theme);
-                if (parsedData.gender) setUserGender(parsedData.gender);
-                console.log("User data loaded successfully from Supabase");
-            } catch (e) {
-                console.error("Error parsing user data", e);
-            }
-        }
-        
-        setIsDataLoaded(true); 
-    };
-
-    loadData();
-  }, [user]);
-
-  // Save User Data to Supabase whenever key states change
-  useEffect(() => {
-    // STRICT CHECK: Do not save if data hasn't been loaded yet
-    if (!user || !isDataLoaded || !user.id) return;
-
-    const userData = {
-        salary,
-        expenses,
-        fixedDebts,
-        portfolio,
-        classAllocations,
-        investmentGoalPct,
-        userInvestmentGoal,
-        emergencyFundPct,
-        emergencyMonths,
-        xp,
-        theme,
-        gender: userGender
-    };
-    
-    // Debounce the save operation to avoid too many requests
-    const timeoutId = setTimeout(async () => {
-        setSavingStatus('saving');
-        console.log("Saving data to Supabase...");
-        
-        const { error } = await supabase
-            .from('user_data')
-            .upsert({ id: user.id, data: userData, updated_at: new Date() });
-            
-        if (error) {
-            console.error("Error saving data to Supabase:", error);
-            setSavingStatus('error');
-        } else {
-            console.log("Data saved successfully!");
-            setSavingStatus('saved');
-            // Reset status after a delay
-            setTimeout(() => {
-                setSavingStatus(prev => prev === 'saved' ? 'idle' : prev);
-            }, 3000);
-        }
-    }, 1000); // 1 second debounce
-
-    return () => clearTimeout(timeoutId);
-  }, [user, isDataLoaded, salary, expenses, fixedDebts, portfolio, classAllocations, investmentGoalPct, userInvestmentGoal, emergencyFundPct, emergencyMonths, xp, theme, userGender]);
-
-  // Investment State
-  const [investmentGoalPct, setInvestmentGoalPct] = useState(0);
-  const [userInvestmentGoal, setUserInvestmentGoal] = useState(1000000); // Default 1M Goal
-  const [isEditingGoal, setIsEditingGoal] = useState(false);
-  const [emergencyFundPct, setEmergencyFundPct] = useState(5);
-  const [emergencyMonths, setEmergencyMonths] = useState(6); // Default 6 months for Emergency Fund
-  const [classAllocations, setClassAllocations] = useState({
-    "ETF USA": 0,
-    "FII": 0,
-    "Ação BR": 0,
-    "Renda Fixa": 0,
-    "Cripto": 0,
-    "ETF Brasil": 0,
-    "Ação USA": 0,
-    "REITs": 0,
-    "Tesouro Direto": 0,
-    "CDB/LCI/LCA": 0,
-    "Debêntures": 0,
-    "Fundos de Inv.": 0,
-    "Previdência": 0,
-    "Ouro/Prata": 0,
-    "Crowdfunding": 0,
-    "Reserva Valor": 0
-  });
-  
-  const [portfolio, setPortfolio] = useState([]);
-  const [currency, setCurrency] = useState('BRL');
-  const [exchangeRate, setExchangeRate] = useState(5.00); // Mock exchange rate USD -> BRL
-  const [newAsset, setNewAsset] = useState({ name: "", type: "Ação BR", percentage: "", quantity: "", currentPrice: "" });
-  
-  // Simulation State
-  const [simYears, setSimYears] = useState(10);
-  const [simMonthly, setSimMonthly] = useState(500);
-  const [showIncomeChart, setShowIncomeChart] = useState(false); // Toggle for Income Chart
-
-  const [manualContribution, setManualContribution] = useState("");
-  const [rebalanceResult, setRebalanceResult] = useState(null);
-  const [selectedClassesForRebalance, setSelectedClassesForRebalance] = useState(ASSET_CLASSES);
 
   const calculateRebalancing = (contributionAmount) => {
     if (!contributionAmount || contributionAmount <= 0) return;
+    if (!portfolio || !classAllocations) return;
 
     // 1. Setup: Calculate Total Value
     const currentPortfolioValue = portfolio.reduce((acc, asset) => acc + (asset.quantity * asset.currentPrice), 0);
@@ -434,7 +571,7 @@ export default function FalidaoApp() {
         for (const candidate of candidates) {
             if (candidate.currentPrice <= 0) continue; // Safety check
 
-            if (candidate.type === 'Cripto') {
+            if (candidate.type === 'Cripto' || candidate.type === 'Ouro/Prata') {
                 // Crypto is divisible, always affordable
                 bestCandidate = candidate;
                 break; 
@@ -448,22 +585,17 @@ export default function FalidaoApp() {
         }
         
         // If no asset is affordable (e.g. remaining R$ 50 but all stocks cost R$ 100), we stop.
-        // Unless there is a Crypto option, which would have been picked above.
         if (!bestCandidate) break; 
         
         // Buy Logic
-        if (bestCandidate.type === 'Cripto') {
+        if (bestCandidate.type === 'Cripto' || bestCandidate.type === 'Ouro/Prata') {
             // For Crypto, we can fill the exact deficit or use all remaining money
-            // If deficit is positive, try to fill it. If negative (overweight but still best option?), just add remaining.
             let amountToSpend = remainingMoney;
             
             if (bestCandidate.deficit > 0) {
-                 // Don't overspend if we want to save for others, but in this greedy loop, 
-                 // usually taking the chunk is fine. Let's cap at deficit but minimum 0.01
                  amountToSpend = Math.min(remainingMoney, Math.max(0.01, bestCandidate.deficit));
             }
             
-            // If amount is tiny (floating point error), just take all remaining to clean up
             if (remainingMoney - amountToSpend < 0.01) amountToSpend = remainingMoney;
 
             const qty = amountToSpend / bestCandidate.currentPrice;
@@ -472,15 +604,13 @@ export default function FalidaoApp() {
             
         } else {
             // For Stocks/FIIs/ETFs (Integer units)
-            // Calculate how many we WANT to buy to fill deficit
             const maxAffordable = Math.floor(remainingMoney / bestCandidate.currentPrice);
-            let qtyToBuy = 1; // Default to 1 (Greedy step)
+            let qtyToBuy = 1; // Default to 1
             
             if (bestCandidate.deficit > bestCandidate.currentPrice) {
-                 // If deficit is large, try to buy in bulk to save iterations
                  const neededToFill = Math.floor(bestCandidate.deficit / bestCandidate.currentPrice);
                  qtyToBuy = Math.min(neededToFill, maxAffordable);
-                 if (qtyToBuy < 1) qtyToBuy = 1; // Should allow at least 1 if maxAffordable >= 1
+                 if (qtyToBuy < 1) qtyToBuy = 1;
             }
             
             const cost = qtyToBuy * bestCandidate.currentPrice;
@@ -493,7 +623,7 @@ export default function FalidaoApp() {
   };
 
   const applyRebalancing = () => {
-    if (!rebalanceResult) return;
+    if (!rebalanceResult || !portfolio) return;
 
     // Use map to return a new array with updated quantities
     const updatedPortfolio = portfolio.map(asset => {
@@ -518,38 +648,37 @@ export default function FalidaoApp() {
     setTimeout(() => alert("Aporte realizado com sucesso! Sua carteira foi atualizada."), 100);
   };
 
-
   // Calculations
-  const totalFixedDebts = useMemo(() => fixedDebts.reduce((acc, curr) => acc + curr.amount, 0), [fixedDebts]);
-  const investmentAmount = (salary * investmentGoalPct) / 100;
-  const emergencyAmount = (salary * emergencyFundPct) / 100;
-  const totalExpenses = useMemo(() => expenses.reduce((acc, curr) => acc + curr.amount, 0), [expenses]);
+  const totalFixedDebts = useMemo(() => (fixedDebts || []).reduce((acc, curr) => acc + curr.amount, 0), [fixedDebts]);
+  const investmentAmount = ((salary || 0) * (investmentGoalPct || 0)) / 100;
+  const emergencyAmount = ((salary || 0) * (emergencyFundPct || 0)) / 100;
+  const totalExpenses = useMemo(() => (expenses || []).reduce((acc, curr) => acc + curr.amount, 0), [expenses]);
   
   // Balance calculation: Salary - Fixed Debts - Variable Expenses - Investments
-  const balance = salary - totalFixedDebts - totalExpenses - investmentAmount;
+  const balance = (salary || 0) - totalFixedDebts - totalExpenses - investmentAmount;
   
   // Progress bar: (Fixed + Variable + Investment) / Salary
   const totalCommitment = totalFixedDebts + totalExpenses + investmentAmount;
-  const progress = salary > 0 ? Math.min((totalCommitment / salary) * 100, 100) : 0;
-  const isOverBudget = salary > 0 && totalCommitment > salary;
+  const progress = (salary || 0) > 0 ? Math.min((totalCommitment / salary) * 100, 100) : 0;
+  const isOverBudget = (salary || 0) > 0 && totalCommitment > salary;
 
   // Mascot Logic
   const totalPatrimony = useMemo(() => {
-    return portfolio.reduce((acc, asset) => acc + (asset.quantity * asset.currentPrice), 0);
+    return (portfolio || []).reduce((acc, asset) => acc + (asset.quantity * asset.currentPrice), 0);
   }, [portfolio]);
 
   const passiveIncome = useMemo(() => {
-     return portfolio.reduce((acc, asset) => {
+     return (portfolio || []).reduce((acc, asset) => {
         const yieldRate = (ASSET_YIELDS[asset.type] || 0) / 100;
         return acc + (asset.quantity * asset.currentPrice * yieldRate / 12);
      }, 0);
   }, [portfolio]);
 
   // Emergency Fund Calculations
-  const emergencyGoalValue = useMemo(() => totalExpenses * emergencyMonths, [totalExpenses, emergencyMonths]);
+  const emergencyGoalValue = useMemo(() => totalExpenses * (emergencyMonths || 6), [totalExpenses, emergencyMonths]);
   
   const currentEmergencyValue = useMemo(() => {
-    return portfolio
+    return (portfolio || [])
       .filter(asset => asset.type === 'Renda Fixa' || asset.name.includes('Tesouro'))
       .reduce((acc, asset) => acc + (asset.quantity * asset.currentPrice), 0);
   }, [portfolio]);
@@ -566,7 +695,7 @@ export default function FalidaoApp() {
     const CUTTABLE_CATEGORIES = ['Lazer', 'Compras', 'Assinaturas', 'Viagem', 'Outros', 'Alimentação'];
     const analysis = {};
 
-    expenses.forEach(exp => {
+    (expenses || []).forEach(exp => {
         if (CUTTABLE_CATEGORIES.includes(exp.category)) {
             if (!analysis[exp.category]) analysis[exp.category] = 0;
             analysis[exp.category] += exp.amount;
@@ -677,31 +806,29 @@ export default function FalidaoApp() {
     };
   }, [isOverBudget, balance, totalPatrimony, userInvestmentGoal, userGender]);
 
-  // XP & Missions System
-  const [xp, setXp] = useState(0);
-  const [completedMissions, setCompletedMissions] = useState([]);
-
-  const MISSIONS = [
-    { id: 1, title: "Primeiro Gasto", xp: 100, icon: Receipt, check: () => expenses.length > 0 },
-    { id: 2, title: "Definir Meta", xp: 150, icon: Target, check: () => investmentGoalPct > 0 },
-    { id: 3, title: "Primeiro Investimento", xp: 300, icon: TrendingUp, check: () => portfolio.length > 0 },
-    { id: 4, title: "Reserva Iniciada", xp: 200, icon: ShieldCheck, check: () => emergencyFundPct > 0 },
+  // 4. Missions Effect (Moved here to access calculated values like isOverBudget)
+  const MISSIONS = useMemo(() => [
+    { id: 1, title: "Primeiro Gasto", xp: 100, icon: Receipt, check: () => (expenses || []).length > 0 },
+    { id: 2, title: "Definir Meta", xp: 150, icon: Target, check: () => (investmentGoalPct || 0) > 0 },
+    { id: 3, title: "Primeiro Investimento", xp: 300, icon: TrendingUp, check: () => (portfolio || []).length > 0 },
+    { id: 4, title: "Reserva Iniciada", xp: 200, icon: ShieldCheck, check: () => (emergencyFundPct || 0) > 0 },
     { id: 5, title: "Nome Limpo", xp: 500, icon: Sparkles, check: () => !isOverBudget },
-  ];
+  ], [expenses, investmentGoalPct, portfolio, emergencyFundPct, isOverBudget]);
 
   useEffect(() => {
     // Check missions
+    if (!isDataLoaded) return;
+
     MISSIONS.forEach(mission => {
         if (!completedMissions.includes(mission.id) && mission.check()) {
             setCompletedMissions(prev => [...prev, mission.id]);
             setXp(prev => prev + mission.xp);
-            // Optional: Show toast notification
         }
     });
-  }, [expenses, investmentGoalPct, portfolio, emergencyFundPct, isOverBudget, completedMissions]);
+  }, [MISSIONS, completedMissions, isDataLoaded]);
 
   // Investment Calculations
-  const totalClassAllocation = useMemo(() => Object.values(classAllocations).reduce((acc, curr) => acc + curr, 0), [classAllocations]);
+  const totalClassAllocation = useMemo(() => Object.values(classAllocations || {}).reduce((acc, curr) => acc + curr, 0), [classAllocations]);
   
   const allocationHealth = useMemo(() => {
     if (totalClassAllocation === 100) return "healthy";
@@ -713,7 +840,7 @@ export default function FalidaoApp() {
     const grouped = {};
     
     // Initialize groups based on allocation
-    Object.keys(classAllocations).forEach(cls => {
+    Object.keys(classAllocations || {}).forEach(cls => {
         if (classAllocations[cls] > 0) {
             grouped[cls] = { 
                 targetPct: classAllocations[cls], 
@@ -724,7 +851,7 @@ export default function FalidaoApp() {
     });
 
     // Distribute assets
-    portfolio.forEach(asset => {
+    (portfolio || []).forEach(asset => {
       if (grouped[asset.type]) {
         const assetAmount = (grouped[asset.type].totalAmount * asset.percentage) / 100;
         grouped[asset.type].assets.push({ ...asset, amount: assetAmount });
@@ -736,7 +863,7 @@ export default function FalidaoApp() {
   // Chart Data
   const categoryData = useMemo(() => {
     const data = {};
-    expenses.forEach(exp => {
+    (expenses || []).forEach(exp => {
       if (!data[exp.category]) data[exp.category] = 0;
       data[exp.category] += exp.amount;
     });
@@ -744,7 +871,7 @@ export default function FalidaoApp() {
   }, [expenses]);
 
   const portfolioData = useMemo(() => {
-    return Object.keys(classAllocations)
+    return Object.keys(classAllocations || {})
       .filter(key => classAllocations[key] > 0)
       .map(key => ({ name: key, value: classAllocations[key] }));
   }, [classAllocations]);
@@ -755,7 +882,7 @@ export default function FalidaoApp() {
     let totalWeightedYield = 0;
     let totalAllocation = 0;
 
-    Object.keys(classAllocations).forEach(cls => {
+    Object.keys(classAllocations || {}).forEach(cls => {
       const allocation = classAllocations[cls];
       if (allocation > 0) {
         totalWeightedReturn += allocation * (ASSET_RETURNS[cls] || 0);
@@ -913,10 +1040,11 @@ export default function FalidaoApp() {
   };
 
   const formatCurrency = (value, curr = currency) => {
+    const val = value || 0;
     if (curr === 'USD') {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
     }
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   };
 
   const convertValue = (value) => {
@@ -958,7 +1086,7 @@ export default function FalidaoApp() {
     return null;
   };
 
-  if (!user) {
+  if (!user || authView === 'update_password') {
     return (
       <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-[var(--bg-card)] p-8 rounded-2xl border border-[var(--border-color)] shadow-2xl animate-in fade-in zoom-in duration-500">
@@ -970,7 +1098,7 @@ export default function FalidaoApp() {
               CLT Rico
             </h1>
             <p className="text-[var(--text-secondary)] text-center">
-              Seu caminho para a liberdade financeira começa aqui.
+              {authView === 'update_password' ? 'Crie sua nova senha' : 'Seu caminho para a liberdade financeira começa aqui.'}
             </p>
           </div>
 
@@ -981,9 +1109,15 @@ export default function FalidaoApp() {
                    {authError}
                </div>
             )}
+            {authSuccess && (
+               <div className="bg-[var(--success-soft)]/20 border border-[var(--success)]/50 text-[var(--success)] p-3 rounded-xl text-sm flex items-center gap-2">
+                   <CheckCircle2 size={16} />
+                   {authSuccess}
+               </div>
+            )}
 
             {authView === 'register' && (
-              <div>
+              <div className="animate-in fade-in slide-in-from-bottom-2">
                 <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">Nome</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
@@ -999,38 +1133,49 @@ export default function FalidaoApp() {
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">E-mail</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
-                <input
-                  type="email"
-                  required
-                  placeholder="seu@email.com"
-                  value={authForm.email}
-                  onChange={(e) => setAuthForm({...authForm, email: e.target.value})}
-                  className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-xl py-3 pl-10 pr-4 outline-none focus:border-[var(--primary)] transition-colors"
-                />
-              </div>
-            </div>
+            {authView !== 'update_password' && (
+                <div>
+                <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">E-mail</label>
+                <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
+                    <input
+                    type="email"
+                    required
+                    placeholder="seu@email.com"
+                    value={authForm.email}
+                    onChange={(e) => setAuthForm({...authForm, email: e.target.value})}
+                    className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-xl py-3 pl-10 pr-4 outline-none focus:border-[var(--primary)] transition-colors"
+                    />
+                </div>
+                </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">Senha</label>
+            {authView !== 'forgot' && (
+            <div className="animate-in fade-in slide-in-from-bottom-2">
+              <label className="block text-sm font-bold text-[var(--text-secondary)] mb-1">
+                  {authView === 'update_password' ? 'Nova Senha' : 'Senha'}
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
                 <input
                   type="password"
                   required
-                  placeholder="******"
+                  placeholder={authView === 'update_password' ? "Mínimo 6 caracteres" : "******"}
                   value={authForm.password}
                   onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
                   className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-xl py-3 pl-10 pr-4 outline-none focus:border-[var(--primary)] transition-colors"
                 />
               </div>
+              {authView === 'login' && (
+                <div className="text-right mt-1">
+                    {/* Forgot Password link moved to below the button for better layout */}
+                </div>
+              )}
             </div>
+            )}
 
             {authView === 'register' && (
-               <div>
+               <div className="animate-in fade-in slide-in-from-bottom-2">
                    <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2">Gênero (para o Mascote)</label>
                    <div className="flex gap-4">
                        <label className={`flex-1 cursor-pointer p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${authForm.gender === 'male' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}>
@@ -1047,25 +1192,66 @@ export default function FalidaoApp() {
 
             <button
               type="submit"
-              className="w-full bg-[var(--primary)] hover:opacity-90 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-900/20 transition-all transform active:scale-95"
+              disabled={isAuthLoading}
+              className={`w-full bg-[var(--primary)] hover:opacity-90 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-900/20 transition-all transform active:scale-95 flex justify-center items-center gap-2 ${isAuthLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              {authView === 'login' ? 'Entrar' : 'Criar Conta'}
+              {isAuthLoading ? (
+                  <>
+                      <Loader2 className="animate-spin" size={20} />
+                      Aguarde...
+                  </>
+              ) : (
+                  authView === 'login' ? 'Entrar' : authView === 'register' ? 'Criar Conta' : authView === 'update_password' ? 'Salvar Nova Senha' : 'Enviar Link de Recuperação'
+              )}
             </button>
+            
+            {authView === 'login' && (
+                <button
+                    type="button"
+                    onClick={() => {
+                        setAuthView('forgot');
+                        setAuthError('');
+                        setAuthSuccess('');
+                    }}
+                    className="w-full mt-3 text-sm text-[var(--primary)] hover:underline opacity-80 hover:opacity-100"
+                >
+                    Esqueci minha senha
+                </button>
+            )}
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-[var(--text-secondary)] text-sm">
-              {authView === 'login' ? 'Ainda não tem conta?' : 'Já tem uma conta?'}
-              <button
-                onClick={() => {
-                    setAuthView(authView === 'login' ? 'register' : 'login');
-                    setAuthError('');
-                }}
-                className="ml-2 text-[var(--primary)] font-bold hover:underline"
-              >
-                {authView === 'login' ? 'Cadastre-se' : 'Faça Login'}
-              </button>
-            </p>
+            {authView === 'forgot' || authView === 'update_password' ? (
+                <button
+                    type="button"
+                    onClick={() => {
+                        setAuthView('login');
+                        setAuthError('');
+                        setAuthSuccess('');
+                        if (authView === 'update_password') {
+                             window.location.reload(); 
+                        }
+                    }}
+                    className="text-[var(--primary)] font-bold hover:underline text-sm"
+                >
+                    {authView === 'update_password' ? 'Cancelar' : 'Voltar para Login'}
+                </button>
+            ) : (
+                <p className="text-[var(--text-secondary)] text-sm">
+                {authView === 'login' ? 'Ainda não tem conta?' : 'Já tem uma conta?'}
+                <button
+                    type="button"
+                    onClick={() => {
+                        setAuthView(authView === 'login' ? 'register' : 'login');
+                        setAuthError('');
+                        setAuthSuccess('');
+                    }}
+                    className="ml-2 text-[var(--primary)] font-bold hover:underline"
+                >
+                    {authView === 'login' ? 'Cadastre-se' : 'Faça Login'}
+                </button>
+                </p>
+            )}
           </div>
         </div>
       </div>
@@ -1534,12 +1720,12 @@ export default function FalidaoApp() {
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {fixedDebts.length === 0 && (
+                        {(fixedDebts || []).length === 0 && (
                             <div className="col-span-full text-center py-8 text-[var(--text-secondary)] border-2 border-dashed border-[var(--border-color)] rounded-xl">
                                 Nenhuma dívida fixa cadastrada. Que tal adicionar uma para organizar melhor?
                             </div>
                         )}
-                        {fixedDebts.map(debt => (
+                        {(fixedDebts || []).map(debt => (
                             <div key={debt.id} className="bg-[var(--bg-input)] p-4 rounded-xl flex justify-between items-center border border-[var(--border-color)] group hover:border-[var(--warning)] transition-colors">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-[var(--warning-soft)] rounded-lg text-[var(--warning)]">
@@ -1689,14 +1875,14 @@ export default function FalidaoApp() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-color)]">
-                    {expenses.length === 0 ? (
+                    {(expenses || []).length === 0 ? (
                       <tr>
                         <td colSpan="5" className="px-6 py-8 text-center text-[var(--text-secondary)]">
                           Nenhum gasto registrado ainda.
                         </td>
                       </tr>
                     ) : (
-                      expenses.map((expense) => (
+                      (expenses || []).map((expense) => (
                         <tr key={expense.id} className="hover:bg-[var(--bg-input)] transition-colors group">
                           <td className="px-6 py-4 text-[var(--text-secondary)] text-sm">
                             {new Date(expense.date).toLocaleDateString('pt-BR')}
@@ -2270,16 +2456,20 @@ export default function FalidaoApp() {
                                 {asset.type === 'Cripto' ? asset.quantity : Math.floor(asset.quantity)}
                               </td>
                               <td className="px-4 py-3 text-right text-[var(--text-secondary)]">
-                                {formatCurrency(convertValue(asset.currentPrice), currency)}
+                                {formatCurrency(asset.currentPrice)}
                               </td>
-                              <td className="px-4 py-3 text-right font-bold text-[var(--success)]">
-                                {formatCurrency(convertValue(asset.quantity * asset.currentPrice), currency)}
+                              <td className="px-4 py-3 text-right font-bold text-[var(--text-primary)]">
+                                {formatCurrency(asset.quantity * asset.currentPrice)}
                               </td>
-                              <td className="px-4 py-3 text-right text-[var(--primary-light)] font-medium">{asset.percentage}%</td>
+                              <td className="px-4 py-3 text-right text-[var(--text-secondary)]">
+                                {assetsByClass[asset.type] && assetsByClass[asset.type].totalAmount > 0 ? (
+                                    ((asset.quantity * asset.currentPrice) / assetsByClass[asset.type].totalAmount * 100).toFixed(1) + '%'
+                                ) : '-'}
+                              </td>
                               <td className="px-4 py-3 text-right">
                                 <button 
                                   onClick={() => handleDeleteAsset(asset.id)}
-                                  className="text-[var(--text-secondary)] hover:text-[var(--danger)] transition-colors opacity-0 group-hover:opacity-100"
+                                  className="text-[var(--text-secondary)] hover:text-[var(--danger)] opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   <Trash2 size={16} />
                                 </button>
@@ -2288,39 +2478,6 @@ export default function FalidaoApp() {
                           ))}
                         </tbody>
                       </table>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Charts */}
-                <div className="space-y-6">
-                  {/* Allocation Chart */}
-                  <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)]">
-                    <h3 className="text-sm font-bold mb-4 text-[var(--text-secondary)] uppercase tracking-wider">Alocação por Classe</h3>
-                    <div className="h-48 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={portfolioData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={40}
-                            outerRadius={60}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {portfolioData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={ASSET_CLASS_COLORS[entry.name] || ASSET_COLORS[index % ASSET_COLORS.length]} stroke="var(--bg-card)" />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }}
-                            itemStyle={{ color: 'var(--text-primary)' }}
-                            formatter={(value) => `${value}%`}
-                          />
-                          <Legend wrapperStyle={{ fontSize: '12px' }} />
-                        </PieChart>
-                      </ResponsiveContainer>
                     </div>
                   </div>
                 </div>
