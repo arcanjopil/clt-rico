@@ -161,7 +161,58 @@ export default function FalidaoApp() {
   const [xp, setXp] = useState(0);
   const [completedMissions, setCompletedMissions] = useState([]);
 
+  // 8. Market Data State
+  const [btcRate, setBtcRate] = useState(0);
+  const [usdRate, setUsdRate] = useState(0);
+  const [isSearchingAsset, setIsSearchingAsset] = useState(false);
+
   // --- FUNCTIONS ---
+
+  const fetchMarketRates = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    try {
+        const res = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL');
+        const data = await res.json();
+        if (data.USDBRL) setUsdRate(parseFloat(data.USDBRL.bid));
+        if (data.BTCBRL) setBtcRate(parseFloat(data.BTCBRL.bid));
+    } catch (error) {
+        console.error("Error fetching rates", error);
+    }
+  }, []);
+
+  const fetchAssetPrice = async (ticker) => {
+    if (!ticker) return;
+    setIsSearchingAsset(true);
+    
+    // Normalize ticker
+    const cleanTicker = ticker.trim().toUpperCase();
+    
+    try {
+        // Try BRAPI (Free tier often works for top stocks without token, or we rely on public access)
+        // If it fails, we catch.
+        const res = await fetch(`https://brapi.dev/api/quote/${cleanTicker}?range=1d&interval=1d&fundamental=false&dividends=false`);
+        
+        if (res.ok) {
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                const result = data.results[0];
+                const price = result.regularMarketPrice;
+                
+                setNewAsset(prev => ({
+                    ...prev,
+                    name: result.symbol,
+                    currentPrice: price,
+                    // Try to infer type if not set or default
+                    type: result.symbol.endsWith('11') ? (prev.type === 'Ação BR' ? 'FII' : prev.type) : prev.type
+                }));
+            }
+        }
+    } catch (e) {
+        console.error("Error fetching asset price:", e);
+    } finally {
+        setIsSearchingAsset(false);
+    }
+  };
 
   const loadData = useCallback(async () => {
     if (typeof window === 'undefined') return;
@@ -258,6 +309,9 @@ export default function FalidaoApp() {
   // 1. Auth Check Effect
   useEffect(() => {
     let mounted = true;
+
+    // Fetch Market Rates
+    fetchMarketRates();
 
     const initAuth = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -2000,10 +2054,26 @@ export default function FalidaoApp() {
               {/* Automatic Rebalancing Panel */}
               <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[var(--gradient-start)] to-[var(--gradient-end)]"></div>
-                <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-[var(--text-primary)]">
-                  <Activity size={20} className="text-[var(--info)]" />
-                  Painel de Aporte do Mês (Automático)
-                </h3>
+                
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--text-primary)]">
+                        <Activity size={20} className="text-[var(--info)]" />
+                        Painel de Aporte do Mês (Automático)
+                    </h3>
+                    
+                    {/* Market Rates Widget */}
+                    <div className="flex gap-3 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] text-xs font-medium">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[var(--text-secondary)]">🇺🇸 USD</span>
+                            <span className="text-[var(--success)]">{usdRate > 0 ? formatCurrency(usdRate, 'BRL') : '...'}</span>
+                        </div>
+                        <div className="w-px bg-[var(--border-color)]"></div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[var(--text-secondary)]">₿ BTC</span>
+                            <span className="text-[var(--warning)]">{btcRate > 0 ? formatCurrency(btcRate, 'BRL') : '...'}</span>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Manual Contribution Input */}
                 <div className="mb-8 bg-[var(--bg-input)] p-6 rounded-xl border border-[var(--border-color)]">
@@ -2294,13 +2364,21 @@ export default function FalidaoApp() {
                     
                     {/* Add Asset Form */}
                     <form onSubmit={handleAddAsset} className="flex flex-wrap gap-4 mb-6 bg-[var(--bg-input)] p-4 rounded-xl border border-[var(--border-color)]">
-                      <input
-                        type="text"
-                        placeholder="Ativo (ex: IVVB11)"
-                        value={newAsset.name}
-                        onChange={(e) => setNewAsset({...newAsset, name: e.target.value})}
-                        className="flex-1 min-w-[120px] bg-transparent border-b border-[var(--text-secondary)] focus:border-[var(--primary)] outline-none py-2 text-sm text-[var(--text-primary)]"
-                      />
+                      <div className="relative flex-1 min-w-[120px]">
+                        <input
+                            type="text"
+                            placeholder="Ativo (ex: PETR4)"
+                            value={newAsset.name}
+                            onChange={(e) => setNewAsset({...newAsset, name: e.target.value.toUpperCase()})}
+                            onBlur={(e) => fetchAssetPrice(e.target.value)}
+                            className="w-full bg-transparent border-b border-[var(--text-secondary)] focus:border-[var(--primary)] outline-none py-2 text-sm text-[var(--text-primary)] pr-8"
+                        />
+                        {isSearchingAsset && (
+                            <div className="absolute right-0 top-2">
+                                <Loader2 className="animate-spin text-[var(--primary)]" size={14} />
+                            </div>
+                        )}
+                      </div>
                       <select
                         value={newAsset.type}
                         onChange={(e) => setNewAsset({...newAsset, type: e.target.value})}
