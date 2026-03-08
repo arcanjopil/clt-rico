@@ -173,14 +173,18 @@ export default function FalidaoApp() {
     try {
         const res = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL');
         const data = await res.json();
-        if (data.USDBRL) setUsdRate(parseFloat(data.USDBRL.bid));
+        if (data.USDBRL) {
+            const rate = parseFloat(data.USDBRL.bid);
+            setUsdRate(rate);
+            setExchangeRate(rate); // Sync for global usage
+        }
         if (data.BTCBRL) setBtcRate(parseFloat(data.BTCBRL.bid));
     } catch (error) {
         console.error("Error fetching rates", error);
     }
   }, []);
 
-  const fetchAssetPrice = async (ticker) => {
+  const fetchAssetPrice = useCallback(async (ticker) => {
     if (!ticker) return;
     setIsSearchingAsset(true);
     
@@ -188,23 +192,57 @@ export default function FalidaoApp() {
     const cleanTicker = ticker.trim().toUpperCase();
     
     try {
-        // Try BRAPI (Free tier often works for top stocks without token, or we rely on public access)
-        // If it fails, we catch.
+        // 1. Check for Crypto (BTC, ETH, etc)
+        const isCrypto = ['BTC', 'ETH', 'SOL', 'USDT', 'BNB', 'XRP', 'ADA', 'DOGE', 'DOT', 'AVAX'].includes(cleanTicker) || cleanTicker.endsWith('USDT');
+        
+        if (isCrypto) {
+            // Use AwesomeAPI
+            const targetCurr = currency; // BRL or USD
+            const pair = `${cleanTicker}-${targetCurr}`;
+            const res = await fetch(`https://economia.awesomeapi.com.br/last/${pair}`);
+            
+            if (res.ok) {
+                const data = await res.json();
+                const key = `${cleanTicker}${targetCurr}`;
+                if (data[key]) {
+                    setNewAsset(prev => ({
+                        ...prev,
+                        name: cleanTicker,
+                        currentPrice: parseFloat(data[key].bid),
+                        type: 'Cripto'
+                    }));
+                    setIsSearchingAsset(false);
+                    return;
+                }
+            }
+        }
+
+        // 2. Check for B3 Assets (Brapi)
+        // Brapi returns values in BRL.
         const res = await fetch(`https://brapi.dev/api/quote/${cleanTicker}?range=1d&interval=1d&fundamental=false&dividends=false`);
         
         if (res.ok) {
             const data = await res.json();
             if (data.results && data.results.length > 0) {
                 const result = data.results[0];
-                const price = result.regularMarketPrice;
+                let price = result.regularMarketPrice;
+                
+                // Currency Conversion Logic
+                // Asset is BRL. 
+                // If user selected USD, convert BRL -> USD
+                if (currency === 'USD' && usdRate > 0) {
+                    price = price / usdRate;
+                }
                 
                 setNewAsset(prev => ({
                     ...prev,
                     name: result.symbol,
                     currentPrice: price,
-                    // Try to infer type if not set or default
+                    // Try to infer type
                     type: result.symbol.endsWith('11') ? (prev.type === 'Ação BR' ? 'FII' : prev.type) : prev.type
                 }));
+                setIsSearchingAsset(false);
+                return;
             }
         }
     } catch (e) {
@@ -212,7 +250,17 @@ export default function FalidaoApp() {
     } finally {
         setIsSearchingAsset(false);
     }
-  };
+  }, [currency, usdRate]);
+
+  // 9. Auto-fetch price on currency change or typing (debounced)
+  useEffect(() => {
+    if (newAsset.name && !isSearchingAsset) {
+        const timer = setTimeout(() => {
+             fetchAssetPrice(newAsset.name);
+        }, 800);
+        return () => clearTimeout(timer);
+    }
+  }, [newAsset.name, fetchAssetPrice]);
 
   const loadData = useCallback(async () => {
     if (typeof window === 'undefined') return;
