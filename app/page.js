@@ -164,6 +164,7 @@ export default function FalidaoApp() {
   // --- FUNCTIONS ---
 
   const loadData = useCallback(async () => {
+    if (typeof window === 'undefined') return;
     if (!user || !user.id) return;
 
     try {
@@ -209,6 +210,7 @@ export default function FalidaoApp() {
   }, [user]);
 
   const saveData = useCallback(async () => {
+    if (typeof window === 'undefined') return;
     if (!user || !user.id || !isDataLoaded) return;
 
     setSavingStatus('saving');
