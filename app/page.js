@@ -166,6 +166,10 @@ export default function FalidaoApp() {
   const [usdRate, setUsdRate] = useState(0);
   const [isSearchingAsset, setIsSearchingAsset] = useState(false);
 
+  // 10. Subscription State
+  const [isPro, setIsPro] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+
   // --- FUNCTIONS ---
 
   const fetchMarketRates = useCallback(async () => {
@@ -299,6 +303,19 @@ export default function FalidaoApp() {
         setEmergencyFundPct(data.data?.emergencyFundPct || 5);
         setEmergencyMonths(data.data?.emergencyMonths || 6);
         
+        // Fetch subscription status
+        const { data: subData } = await supabase
+            .from('subscriptions')
+            .select('status, plan')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (subData && subData.status === 'active') {
+            setIsPro(true);
+        } else {
+            setIsPro(false);
+        }
+
         setIsDataLoaded(true);
       } else {
         setIsDataLoaded(true);
@@ -962,6 +979,41 @@ export default function FalidaoApp() {
   }, [simYears, weightedAverageRate, weightedAverageYield, simMonthly]);
 
   // Handlers
+  const handleSubscribe = async (planType) => {
+    if (!user) return;
+    
+    // Hardcoded Price IDs - Generated automatically via Stripe API
+    const priceId = planType === 'monthly' 
+        ? 'price_1T8iNhH3YZ3ci68QcbgDa0ln' // CLT Rico Pro Mensal (R$ 9.90)
+        : 'price_1T8iOtH3YZ3ci68QZ8jT1kYx'; // CLT Rico Pro Anual (R$ 99.90)
+
+    try {
+        const res = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                priceId,
+                userEmail: user.email,
+                userId: user.id,
+            }),
+        });
+
+        const data = await res.json();
+        
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            console.error('Failed to create checkout session');
+            alert('Erro ao iniciar pagamento. Verifique o console.');
+        }
+    } catch (error) {
+        console.error('Error subscribing:', error);
+        alert('Erro ao processar assinatura.');
+    }
+  };
+
   const handleCloseMonth = () => {
     if (window.confirm("Tem certeza que deseja fechar o mês? Isso apagará todos os gastos variáveis (lista de compras, lazer, etc), mas manterá seu salário, investimentos e dívidas fixas.")) {
         setExpenses([]);
@@ -1385,6 +1437,19 @@ export default function FalidaoApp() {
                 </div>
               )}
             </div>
+
+            {/* Pro Subscription Button */}
+            <button 
+              onClick={() => setShowSubscriptionModal(true)}
+              className={`p-3 rounded-xl border transition-all relative group overflow-hidden ${isPro ? 'bg-gradient-to-r from-yellow-500 to-amber-600 border-yellow-400 text-white shadow-lg shadow-yellow-500/20' : 'bg-[var(--bg-input)] border-[var(--border-color)] hover:bg-[var(--primary-soft)] text-[var(--text-secondary)] hover:text-[var(--primary)]'}`}
+              title={isPro ? "Membro PRO" : "Seja PRO"}
+            >
+              <div className="relative z-10 flex items-center gap-2">
+                 <Crown size={20} className={isPro ? "fill-white" : ""} />
+                 {isPro && <span className="text-xs font-bold hidden md:inline">PRO</span>}
+              </div>
+              {!isPro && <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>}
+            </button>
           </div>
         </header>
 
@@ -2536,6 +2601,122 @@ export default function FalidaoApp() {
             </div>
           )}
         </main>
+
+        {/* Subscription Modal */}
+        {showSubscriptionModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+             <div 
+                className="bg-[var(--bg-card)] max-w-4xl w-full rounded-3xl border border-[var(--border-color)] shadow-2xl relative overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300"
+                onClick={(e) => e.stopPropagation()}
+             >
+                {/* Left Side: Visual & Benefits */}
+                <div className="md:w-1/2 bg-gradient-to-br from-indigo-900 to-purple-900 p-8 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                    
+                    <div className="relative z-10 h-full flex flex-col justify-between">
+                        <div>
+                            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 border border-white/20">
+                                <Crown size={24} className="text-yellow-400 fill-yellow-400" />
+                            </div>
+                            <h2 className="text-3xl font-bold mb-4 leading-tight">
+                                Acelere sua jornada para a <span className="text-yellow-400">Liberdade Financeira</span>
+                            </h2>
+                            <p className="text-indigo-200 mb-8">
+                                Desbloqueie ferramentas exclusivas e análises avançadas para tomar as melhores decisões.
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {[
+                                "Sem anúncios e distrações",
+                                "Relatórios avançados de dividendos",
+                                "Simulador de Aposentadoria Pro",
+                                "Suporte prioritário via WhatsApp",
+                                "Acesso antecipado a novas features"
+                            ].map((item, i) => (
+                                <div key={i} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-sm">
+                                    <div className="bg-green-500/20 p-1 rounded-full">
+                                        <CheckCircle2 size={16} className="text-green-400" />
+                                    </div>
+                                    <span className="text-sm font-medium">{item}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Side: Pricing */}
+                <div className="md:w-1/2 p-8 bg-[var(--bg-card)] relative">
+                    <button 
+                        onClick={() => setShowSubscriptionModal(false)}
+                        className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors p-2 hover:bg-[var(--bg-input)] rounded-full"
+                    >
+                        <LogOut size={20} />
+                    </button>
+
+                    <div className="h-full flex flex-col justify-center">
+                        <div className="text-center mb-8">
+                            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Escolha seu plano</h3>
+                            <p className="text-[var(--text-secondary)] text-sm">Cancele quando quiser. Sem compromisso.</p>
+                        </div>
+
+                        {isPro ? (
+                             <div className="bg-green-500/10 border border-green-500/30 p-6 rounded-2xl text-center">
+                                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Crown size={32} className="text-green-500 fill-green-500" />
+                                </div>
+                                <h3 className="text-xl font-bold text-green-500 mb-2">Você é PRO!</h3>
+                                <p className="text-[var(--text-secondary)]">Obrigado por apoiar o projeto. Sua assinatura está ativa.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {/* Monthly Plan */}
+                                <button 
+                                    onClick={() => handleSubscribe('monthly')}
+                                    className="w-full group relative p-5 rounded-2xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-all bg-[var(--bg-input)] hover:bg-[var(--primary-soft)]/10 text-left flex justify-between items-center"
+                                >
+                                    <div>
+                                        <div className="font-bold text-[var(--text-primary)] mb-1">Mensal</div>
+                                        <div className="text-xs text-[var(--text-secondary)]">Pagamento recorrente</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-2xl font-bold text-[var(--text-primary)]">R$ 9,90</div>
+                                        <div className="text-xs text-[var(--text-secondary)]">/mês</div>
+                                    </div>
+                                </button>
+                                
+                                {/* Yearly Plan */}
+                                <button 
+                                    onClick={() => handleSubscribe('yearly')}
+                                    className="w-full group relative p-5 rounded-2xl border-2 border-yellow-500 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 hover:from-yellow-500/10 hover:to-orange-500/10 transition-all text-left flex justify-between items-center shadow-lg shadow-yellow-500/10"
+                                >
+                                    <div className="absolute -top-3 left-6 bg-gradient-to-r from-yellow-500 to-orange-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md">
+                                        ECONOMIZE 17%
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-[var(--text-primary)] mb-1">Anual</div>
+                                        <div className="text-xs text-[var(--text-secondary)]">Cobrado anualmente</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-2xl font-bold text-[var(--text-primary)]">R$ 99,90</div>
+                                        <div className="text-xs text-[var(--text-secondary)]">/ano</div>
+                                    </div>
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="mt-8 text-center">
+                            <p className="text-xs text-[var(--text-secondary)] flex items-center justify-center gap-2">
+                                <Lock size={12} />
+                                Pagamento seguro via Stripe
+                            </p>
+                        </div>
+                    </div>
+                </div>
+             </div>
+          </div>
+        )}
       </div>
     </div>
   );
