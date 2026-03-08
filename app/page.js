@@ -238,7 +238,7 @@ export default function FalidaoApp() {
             // Check if we have data by user_id
             const { data: profile, error } = await supabase
                 .from('user_data')
-                .select('data')
+                .select('*') // Select all columns now
                 .eq('user_id', user.id)
                 .maybeSingle();
 
@@ -288,31 +288,30 @@ export default function FalidaoApp() {
                 return;
             }
 
-            if (profile?.data) {
-                console.log("Dados carregados:", JSON.stringify(profile.data));
-                const loadedData = profile.data;
-
-                // Use nullish coalescing to fallback to default empty values if DB has nulls
-                // But wait, our state expects null as "not loaded".
-                // We should set to loadedData value OR empty structure if undefined in loadedData
+            if (profile) {
+                console.log("Dados carregados:", JSON.stringify(profile));
                 
-                setSalary(loadedData.salary !== undefined ? loadedData.salary : 0);
-                setExpenses(loadedData.expenses || []);
-                setFixedDebts(loadedData.fixedDebts || []);
-                setPortfolio(loadedData.portfolio || []);
-                setClassAllocations(loadedData.classAllocations || {
+                // Map columns back to state
+                setSalary(profile.salario !== null ? profile.salario : 0);
+                setExpenses(profile.gastos || []);
+                setFixedDebts(profile.dividas || []);
+                setPortfolio(profile.carteira || []);
+                setClassAllocations(profile.alocacao || {
                         "ETF USA": 0, "FII": 0, "Ação BR": 0, "Renda Fixa": 0, "Cripto": 0,
                         "ETF Brasil": 0, "Ação USA": 0, "REITs": 0, "Tesouro Direto": 0,
                         "CDB/LCI/LCA": 0, "Debêntures": 0, "Fundos de Inv.": 0,
                         "Previdência": 0, "Ouro/Prata": 0, "Crowdfunding": 0, "Reserva Valor": 0
                     });
-                setInvestmentGoalPct(loadedData.investmentGoalPct !== undefined ? loadedData.investmentGoalPct : 0);
-                setUserInvestmentGoal(loadedData.userInvestmentGoal || 1000000);
-                setEmergencyFundPct(loadedData.emergencyFundPct !== undefined ? loadedData.emergencyFundPct : 5);
-                setEmergencyMonths(loadedData.emergencyMonths || 6);
-                setXp(loadedData.xp !== undefined ? loadedData.xp : 0);
-                setTheme(loadedData.theme || 'default');
-                setUserGender(loadedData.gender || 'male');
+                setInvestmentGoalPct(profile.investimento_pct !== null ? profile.investimento_pct : 0);
+                setUserInvestmentGoal(profile.meta || 1000000);
+                
+                // Map data jsonb column back to other states
+                const additionalData = profile.data || {};
+                setEmergencyFundPct(additionalData.emergencyFundPct !== undefined ? additionalData.emergencyFundPct : 5);
+                setEmergencyMonths(additionalData.emergencyMonths || 6);
+                setXp(additionalData.xp !== undefined ? additionalData.xp : 0);
+                setTheme(additionalData.theme || 'default');
+                setUserGender(additionalData.gender || 'male');
 
                 setIsDataLoaded(true);
             }
@@ -330,6 +329,7 @@ export default function FalidaoApp() {
     if (!user || !user.id || !isDataLoaded) return;
 
     // EXTRA SAFETY: Do not save if critical state is null (not yet initialized)
+    // Note: With default initializers, they won't be null, but keeping check doesn't hurt.
     if (salary === null || expenses === null || fixedDebts === null || portfolio === null) {
         console.warn("Tentativa de salvar abortada: Estado ainda não inicializado.");
         return;
@@ -340,26 +340,62 @@ export default function FalidaoApp() {
         console.log("Salvando dados...");
 
         const userData = {
-            salary: salary || 0,
-            expenses: expenses || [],
-            fixedDebts: fixedDebts || [],
-            portfolio: portfolio || [],
-            classAllocations: classAllocations || {},
-            investmentGoalPct: investmentGoalPct || 0,
-            userInvestmentGoal: userInvestmentGoal || 1000000,
+            salario: salary || 0,
+            gastos: expenses || [],
+            dividas: fixedDebts || [],
+            carteira: portfolio || [],
+            alocacao: classAllocations || {},
+            investimento_pct: investmentGoalPct || 0,
+            meta: userInvestmentGoal || 1000000,
             emergencyFundPct: emergencyFundPct || 5,
             emergencyMonths: emergencyMonths || 6,
             xp: xp || 0,
             theme: theme || 'default',
-            gender: userGender || 'male'
+            gender: userGender || 'male',
+            updated_at: new Date().toISOString()
         };
 
         try {
             // Use upsert with user_id as unique key
+            // We map frontend state to DB columns:
+            // salary -> salario
+            // expenses -> gastos
+            // fixedDebts -> dividas
+            // portfolio -> carteira
+            // classAllocations -> alocacao
+            // investmentGoalPct -> investimento_pct
+            // userInvestmentGoal -> meta
+            // Others are stored in the JSONB 'data' column or directly if we added columns.
+            // Wait, looking at the schema:
+            // user_data has specific columns: salario, gastos, dividas, investimento_pct, carteira, alocacao, patrimonio, meta.
+            // AND a 'data' column for anything else.
+            
+            // Let's construct the payload correctly based on schema
+            const payload = {
+                user_id: user.id,
+                salario: userData.salario,
+                gastos: userData.gastos,
+                dividas: userData.dividas,
+                investimento_pct: userData.investimento_pct,
+                carteira: userData.carteira,
+                alocacao: userData.alocacao,
+                patrimonio: 0, // We don't have a direct state for this, usually calculated
+                meta: userData.meta,
+                updated_at: userData.updated_at,
+                // Store everything else in 'data' jsonb column to be safe and flexible
+                data: {
+                    emergencyFundPct: userData.emergencyFundPct,
+                    emergencyMonths: userData.emergencyMonths,
+                    xp: userData.xp,
+                    theme: userData.theme,
+                    gender: userData.gender
+                }
+            };
+
             const { error } = await supabase
                 .from('user_data')
                 .upsert(
-                    { user_id: user.id, data: userData, updated_at: new Date() },
+                    payload,
                     { onConflict: 'user_id' }
                 );
 
@@ -1256,6 +1292,18 @@ export default function FalidaoApp() {
         </div>
       </div>
     );
+  }
+
+  // Loading Screen for Data Fetching
+  if (!isDataLoaded) {
+      return (
+          <div className="min-h-screen bg-[var(--bg-app)] flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
+                  <Loader2 className="animate-spin text-[var(--primary)]" size={48} />
+                  <p className="text-[var(--text-secondary)] animate-pulse">Carregando seus dados...</p>
+              </div>
+          </div>
+      );
   }
 
   return (
