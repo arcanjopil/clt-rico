@@ -161,7 +161,7 @@ export default function FalidaoApp() {
   const [xp, setXp] = useState(0);
   const [completedMissions, setCompletedMissions] = useState([]);
 
-  // 8. Market Data State
+  // 8. Market Data State (USD/BTC)
   const [btcRate, setBtcRate] = useState(0);
   const [usdRate, setUsdRate] = useState(0);
   const [isSearchingAsset, setIsSearchingAsset] = useState(false);
