@@ -159,282 +159,157 @@ export default function FalidaoApp() {
 
   // 7. XP & Missions State
   const [xp, setXp] = useState(0);
-  // Removed completedMissions redeclaration from here, it was moved after MISSIONS useMemo
+  const [completedMissions, setCompletedMissions] = useState([]);
 
-  // --- EFFECTS ---
+  // --- FUNCTIONS ---
+
+  const loadData = useCallback(async () => {
+    if (!user || !user.id) return;
+
+    try {
+      console.log("Carregando dados...");
+      const { data, error } = await supabase
+        .from('user_data')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("Erro ao carregar:", error);
+        return;
+      }
+
+      if (data) {
+        setSalary(data.salario || 0);
+        setExpenses(data.gastos || []);
+        setFixedDebts(data.dividas || []);
+        setPortfolio(data.carteira || []);
+        setClassAllocations(data.alocacao || {
+            "ETF USA": 0, "Ação USA": 0, "REITs": 0,
+            "ETF Brasil": 0, "Ação BR": 0, "FII": 0,
+            "Renda Fixa": 0, "Tesouro Direto": 0, "CDB/LCI/LCA": 0, "Debêntures": 0,
+            "Fundos de Inv.": 0, "Previdência": 0,
+            "Cripto": 0, "Ouro/Prata": 0, "Crowdfunding": 0, "Reserva Valor": 0
+        });
+        setInvestmentGoalPct(data.investimento_pct || 0);
+        setUserInvestmentGoal(data.meta || 1000000);
+        setXp(data.data?.xp || 0);
+        setTheme(data.data?.theme || 'default');
+        setUserGender(data.data?.gender || 'male');
+        setEmergencyFundPct(data.data?.emergencyFundPct || 5);
+        setEmergencyMonths(data.data?.emergencyMonths || 6);
+        
+        setIsDataLoaded(true);
+      } else {
+        setIsDataLoaded(true);
+      }
+    } catch (e) {
+      console.error("Exceção no loadData:", e);
+    }
+  }, [user]);
+
+  const saveData = useCallback(async () => {
+    if (!user || !user.id || !isDataLoaded) return;
+
+    setSavingStatus('saving');
+    
+    try {
+      const currentPatrimony = portfolio.reduce((acc, asset) => acc + (Number(asset.quantity) * Number(asset.currentPrice)), 0);
+
+      const { error } = await supabase
+        .from('user_data')
+        .upsert({
+          user_id: user.id,
+          salario: salary,
+          gastos: expenses,
+          dividas: fixedDebts,
+          carteira: portfolio,
+          alocacao: classAllocations,
+          investimento_pct: investmentGoalPct,
+          meta: userInvestmentGoal,
+          patrimonio: currentPatrimony,
+          updated_at: new Date().toISOString(),
+          data: {
+             emergencyFundPct,
+             emergencyMonths,
+             xp,
+             theme,
+             gender: userGender
+          }
+        }, { onConflict: 'user_id' });
+
+      if (error) {
+        console.error("Erro ao salvar:", error);
+        setSavingStatus('error');
+      } else {
+        setSavingStatus('saved');
+        setTimeout(() => setSavingStatus('idle'), 2000);
+      }
+    } catch (e) {
+      console.error("Exceção no saveData:", e);
+      setSavingStatus('error');
+    }
+  }, [user, isDataLoaded, salary, expenses, fixedDebts, portfolio, classAllocations, investmentGoalPct, userInvestmentGoal, emergencyFundPct, emergencyMonths, xp, theme, userGender]);
+
+
 
   // 1. Auth Check Effect
   useEffect(() => {
-    const checkSession = async () => {
+    let mounted = true;
+
+    const initAuth = async () => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-            // Fetch profile data
-            const { data: profile } = await supabase
-                .from('user_data')
-                .select('data')
-                .eq('id', session.user.id)
-                .single();
-            
-            if (profile?.data) {
-                // If profile exists, use that data
-                const userData = profile.data;
-                // Add email from session since it's not in data usually
-                setUser({ ...userData, email: session.user.email, id: session.user.id });
-                // Also set Gender from profile if saved there
-                if (userData.gender) setUserGender(userData.gender);
-            } else {
-                // New user via Supabase
-                setUser({ email: session.user.email, id: session.user.id, name: session.user.user_metadata?.name || 'Usuário' });
+        
+        if (mounted) {
+            if (session?.user) {
+                setUser({ email: session.user.email, id: session.user.id, ...session.user.user_metadata });
             }
         }
     };
     
-    checkSession();
+    initAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log("Auth Event:", event);
+        if (!mounted) return;
+
         if (event === 'PASSWORD_RECOVERY') {
             setAuthView('update_password');
         }
 
         if (session?.user) {
-             const { data: profile } = await supabase
-                .from('user_data')
-                .select('data')
-                .eq('user_id', session.user.id)
-                .maybeSingle();
-             
-             if (profile?.data) {
-                 const userData = profile.data;
-                 setUser({ ...userData, email: session.user.email, id: session.user.id });
-                 if (userData.gender) setUserGender(userData.gender);
-             } else {
-                 setUser({ email: session.user.email, id: session.user.id, name: session.user.user_metadata?.name || 'Usuário' });
-             }
+             setUser(prev => {
+                 if (prev?.id === session.user.id) return prev;
+                 return { email: session.user.email, id: session.user.id, ...session.user.user_metadata };
+             });
         } else {
             setUser(null);
-            if (event !== 'PASSWORD_RECOVERY') {
-                // Keep showing update password form if we are in recovery mode but session not fully established yet or just established
-            }
+            setIsDataLoaded(false);
         }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+        mounted = false;
+        subscription.unsubscribe();
+    };
   }, []);
 
-    // 2. Load User Data Effect
-    useEffect(() => {
-    // If no user, reset data loaded flag
-    if (!user || !user.id) {
-        setIsDataLoaded(false);
-        return;
-    }
-
-    const loadData = async () => {
-        console.log("Carregando dados do usuário...");
-        
-        try {
-            // Check if we have data by user_id
-            const { data: profile, error } = await supabase
-                .from('user_data')
-                .select('*') // Select all columns now
-                .eq('user_id', user.id)
-                .maybeSingle();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error("Erro ao carregar dados do Supabase:", error);
-                return;
-            }
-
-            if (!profile) {
-                console.log("Nenhum dado encontrado. Criando novo registro...");
-                
-                const initialData = {
-                    salary: 0,
-                    expenses: [],
-                    fixedDebts: [],
-                    portfolio: [],
-                    classAllocations: {
-                        "ETF USA": 0, "FII": 0, "Ação BR": 0, "Renda Fixa": 0, "Cripto": 0,
-                        "ETF Brasil": 0, "Ação USA": 0, "REITs": 0, "Tesouro Direto": 0,
-                        "CDB/LCI/LCA": 0, "Debêntures": 0, "Fundos de Inv.": 0,
-                        "Previdência": 0, "Ouro/Prata": 0, "Crowdfunding": 0, "Reserva Valor": 0
-                    },
-                    investmentGoalPct: 0,
-                    userInvestmentGoal: 1000000,
-                    emergencyFundPct: 5,
-                    emergencyMonths: 6,
-                    xp: 0,
-                    theme: 'default',
-                    gender: 'male'
-                };
-
-                // Create new record with user_id
-                // Use upsert to be safe against race conditions
-                const { error: insertError } = await supabase
-                    .from('user_data')
-                    .upsert(
-                        { user_id: user.id, data: initialData, updated_at: new Date() },
-                        { onConflict: 'user_id' }
-                    );
-
-                if (insertError) {
-                    console.error("Erro ao criar registro inicial:", insertError);
-                } else {
-                    console.log("Registro inicial criado com sucesso.");
-                    setIsDataLoaded(true);
-                }
-                return;
-            }
-
-            if (profile) {
-                console.log("Dados carregados:", JSON.stringify(profile));
-                
-                // Map columns back to state
-                setSalary(profile.salario !== null ? profile.salario : 0);
-                setExpenses(profile.gastos || []);
-                setFixedDebts(profile.dividas || []);
-                setPortfolio(profile.carteira || []);
-                setClassAllocations(profile.alocacao || {
-                        "ETF USA": 0, "FII": 0, "Ação BR": 0, "Renda Fixa": 0, "Cripto": 0,
-                        "ETF Brasil": 0, "Ação USA": 0, "REITs": 0, "Tesouro Direto": 0,
-                        "CDB/LCI/LCA": 0, "Debêntures": 0, "Fundos de Inv.": 0,
-                        "Previdência": 0, "Ouro/Prata": 0, "Crowdfunding": 0, "Reserva Valor": 0
-                    });
-                setInvestmentGoalPct(profile.investimento_pct !== null ? profile.investimento_pct : 0);
-                setUserInvestmentGoal(profile.meta || 1000000);
-                
-                // Map data jsonb column back to other states
-                const additionalData = profile.data || {};
-                setEmergencyFundPct(additionalData.emergencyFundPct !== undefined ? additionalData.emergencyFundPct : 5);
-                setEmergencyMonths(additionalData.emergencyMonths || 6);
-                setXp(additionalData.xp !== undefined ? additionalData.xp : 0);
-                setTheme(additionalData.theme || 'default');
-                setUserGender(additionalData.gender || 'male');
-
-                setIsDataLoaded(true);
-            }
-        } catch (e) {
-            console.error("Exceção ao carregar dados:", e);
-        }
-    };
-
-    loadData();
-  }, [user]);
-
-  // 3. Save User Data Effect
+  // 2. Load Data Effect
   useEffect(() => {
-    // CRITICAL: Check isDataLoaded to prevent overwriting with empty state
-    if (!user || !user.id || !isDataLoaded) return;
-
-    // EXTRA SAFETY: Do not save if critical state is null (not yet initialized)
-    // Note: With default initializers, they won't be null, but keeping check doesn't hurt.
-    if (salary === null || expenses === null || fixedDebts === null || portfolio === null) {
-        console.warn("Tentativa de salvar abortada: Estado ainda não inicializado.");
-        return;
+    if (user?.id) {
+        loadData();
     }
+  }, [user?.id, loadData]);
 
-    const saveData = async () => {
-        setSavingStatus('saving');
-        console.log("Salvando dados...");
+  // 3. Save User Data Effect (Debounced)
+  useEffect(() => {
+    if (!isDataLoaded) return;
 
-        const userData = {
-            salario: salary || 0,
-            gastos: expenses || [],
-            dividas: fixedDebts || [],
-            carteira: portfolio || [],
-            alocacao: classAllocations || {},
-            investimento_pct: investmentGoalPct || 0,
-            meta: userInvestmentGoal || 1000000,
-            emergencyFundPct: emergencyFundPct || 5,
-            emergencyMonths: emergencyMonths || 6,
-            xp: xp || 0,
-            theme: theme || 'default',
-            gender: userGender || 'male',
-            updated_at: new Date().toISOString()
-        };
-
-        try {
-            // Use upsert with user_id as unique key
-            // We map frontend state to DB columns:
-            // salary -> salario
-            // expenses -> gastos
-            // fixedDebts -> dividas
-            // portfolio -> carteira
-            // classAllocations -> alocacao
-            // investmentGoalPct -> investimento_pct
-            // userInvestmentGoal -> meta
-            // Others are stored in the JSONB 'data' column or directly if we added columns.
-            // Wait, looking at the schema:
-            // user_data has specific columns: salario, gastos, dividas, investimento_pct, carteira, alocacao, patrimonio, meta.
-            // AND a 'data' column for anything else.
-            
-            // Let's construct the payload correctly based on schema
-            const payload = {
-                user_id: user.id,
-                salario: userData.salario,
-                gastos: userData.gastos,
-                dividas: userData.dividas,
-                investimento_pct: userData.investimento_pct,
-                carteira: userData.carteira,
-                alocacao: userData.alocacao,
-                patrimonio: 0, // We don't have a direct state for this, usually calculated
-                meta: userData.meta,
-                updated_at: userData.updated_at,
-                // Store everything else in 'data' jsonb column to be safe and flexible
-                data: {
-                    emergencyFundPct: userData.emergencyFundPct,
-                    emergencyMonths: userData.emergencyMonths,
-                    xp: userData.xp,
-                    theme: userData.theme,
-                    gender: userData.gender
-                }
-            };
-
-            const { error } = await supabase
-                .from('user_data')
-                .upsert(
-                    payload,
-                    { onConflict: 'user_id' }
-                );
-
-            if (error) {
-                console.error("ERRO ao salvar dados:", error);
-                setSavingStatus('error');
-            } else {
-                console.log("Dados salvos com sucesso");
-                setSavingStatus('saved');
-                setTimeout(() => setSavingStatus('idle'), 3000);
-            }
-        } catch (e) {
-            console.error("Exceção ao salvar dados:", e);
-            setSavingStatus('error');
-        }
-    };
-
-    const timeoutId = setTimeout(saveData, 1000); // 1 second debounce
+    const timeoutId = setTimeout(() => {
+      saveData();
+    }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [
-    user, 
-    isDataLoaded, 
-    salary, 
-    expenses, 
-    fixedDebts, 
-    portfolio, 
-    classAllocations, 
-    investmentGoalPct, 
-    userInvestmentGoal, 
-    emergencyFundPct, 
-    emergencyMonths, 
-    xp, 
-    theme, 
-    userGender
-  ]);
-
-  // 4. Missions Effect - State only
-  const [completedMissions, setCompletedMissions] = useState([]);
+  }, [saveData, isDataLoaded]);
 
 
   // --- HELPERS & HANDLERS ---
