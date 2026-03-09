@@ -100,6 +100,8 @@ const PRESET_EXPENSES = [
   { label: 'Lazer', icon: Film, category: 'Lazer', color: '#8b5cf6' },
 ];
 
+import Link from 'next/link';
+
 export default function FalidaoApp() {
   // --- STATE DEFINITIONS (Must be at top) ---
 
@@ -1439,19 +1441,24 @@ export default function FalidaoApp() {
             </div>
 
             {/* Pro Subscription Button */}
-            <button 
-              onClick={() => setShowSubscriptionModal(true)}
-              className={`p-3 rounded-xl border transition-all relative group overflow-hidden ${isPro ? 'bg-gradient-to-r from-yellow-500 to-amber-600 border-yellow-400 text-white shadow-lg shadow-yellow-500/20' : 'bg-[var(--bg-input)] border-[var(--border-color)] hover:bg-[var(--primary-soft)] text-[var(--text-secondary)] hover:text-[var(--primary)]'}`}
-              title={isPro ? "Membro PRO" : "Seja PRO"}
-            >
-              <div className="relative z-10 flex items-center gap-2">
-                 <Crown size={20} className={isPro ? "fill-white" : ""} />
-                 {isPro && <span className="text-xs font-bold hidden md:inline">PRO</span>}
-              </div>
-              {!isPro && <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>}
-            </button>
-          </div>
-        </header>
+            {!isPro && (
+              <Link 
+                href="/planos"
+                className="p-3 rounded-xl border border-[#f59e0b] bg-[#f59e0b]/10 hover:bg-[#f59e0b] text-[#f59e0b] hover:text-black transition-all font-bold flex items-center gap-2 group"
+              >
+                <Crown size={20} className="fill-current" />
+                <span className="hidden md:inline">Seja Premium</span>
+              </Link>
+            )}
+            
+            {isPro && (
+               <div className="p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-500 flex items-center gap-2">
+                  <Crown size={20} className="fill-yellow-500" />
+                  <span className="text-xs font-bold hidden md:inline">PREMIUM</span>
+               </div>
+            )}
+           </div>
+         </header>
 
         {/* Navigation Tabs */}
         <nav className="flex flex-wrap gap-2 bg-[var(--bg-card)] p-1 rounded-xl w-fit mx-auto md:mx-0 border border-[var(--border-color)]">
