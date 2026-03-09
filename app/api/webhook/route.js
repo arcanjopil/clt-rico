@@ -32,7 +32,7 @@ export async function POST(req) {
       const priceId = subscription.items.data[0]?.price?.id
       
       // Determine plan based on price ID
-      const plan = priceId === process.env.STRIPE_PRICE_MENSAL ? 'mensal' : 'anual'
+      const plan = priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_MENSAL ? 'mensal' : 'anual'
       const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
 
       const { error } = await supabase.from('subscriptions').upsert({
