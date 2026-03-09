@@ -21,23 +21,7 @@ export async function POST(req) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
     const userId = session.metadata.userId
-    // Determine plan based on price ID
-    const plan = session.line_items?.data?.[0]?.price?.id === process.env.NEXT_PUBLIC_STRIPE_PRICE_MENSAL ? 'mensal' : 'anual'
-
-    // Note: session.line_items might not be expanded by default in webhook event. 
-    // We often need to retrieve the session to get line items or infer from other metadata if passed.
-    // However, following the user's prompt exactly. 
-    // If line_items is missing, we might fallback to checking the subscription or just default to 'pro'.
-    // A more robust way is to fetch the subscription details, but I will stick to the provided code structure 
-    // and maybe improve the plan detection if possible or assume the user code provided works as they expect.
-    // Actually, `checkout.session.completed` payload usually DOES NOT contain line_items unless expanded.
-    // I'll stick to the logic provided in the prompt but fix the env var name (STRIPE_PRICE_MENSAL -> NEXT_PUBLIC_STRIPE_PRICE_MENSAL)
-    // The prompt used `process.env.STRIPE_PRICE_MENSAL`. I'll use that as requested but ensure it matches .env.
-    
-    // Let's check the subscription to be safe, or just use what the user asked.
-    // User asked: `const plan = session.line_items?.data?.[0]?.price?.id === process.env.STRIPE_PRICE_MENSAL ? 'mensal' : 'anual'`
-    // I will use `NEXT_PUBLIC_STRIPE_PRICE_MENSAL` since that's what I'm putting in .env.local usually for frontend, 
-    // but here it is backend. I'll make sure to add STRIPE_PRICE_MENSAL to .env.local too.
+    const plan = session.line_items?.data?.[0]?.price?.id === process.env.STRIPE_PRICE_MENSAL ? 'mensal' : 'anual'
 
     await supabase.from('subscriptions').upsert({
       user_id: userId,

@@ -1446,7 +1446,7 @@ export default function FalidaoApp() {
                 href="/planos"
                 className="p-3 rounded-xl border border-[#f59e0b] bg-[#f59e0b]/10 hover:bg-[#f59e0b] text-[#f59e0b] hover:text-black transition-all font-bold flex items-center gap-2 group"
               >
-                <Crown size={20} className="fill-current" />
+                <span>⭐</span>
                 <span className="hidden md:inline">Seja Premium</span>
               </Link>
             )}
