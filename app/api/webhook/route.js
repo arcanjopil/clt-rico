@@ -6,8 +6,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 export async function POST(req) {
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
-
   let event
+
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
@@ -24,15 +24,13 @@ export async function POST(req) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object
       const userId = session.metadata?.userId
-      
       if (!userId) return Response.json({ received: true })
 
-      // Retrieve full subscription details to get accurate period_end and price
       const subscription = await stripe.subscriptions.retrieve(session.subscription)
       const priceId = subscription.items.data[0]?.price?.id
-      
-      // Determine plan based on price ID
-      const plan = priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_MENSAL ? 'mensal' : 'anual'
+
+      // Mensal se bater com o price ID mensal, senão anual
+      const plan = priceId === process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ? 'mensal' : 'anual'
       const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
 
       const { error } = await supabase.from('subscriptions').upsert({
@@ -43,7 +41,7 @@ export async function POST(req) {
         status: 'active',
         current_period_end: periodEnd,
       }, { onConflict: 'user_id' })
-      
+
       if (error) console.error('Supabase error:', error)
     }
 
@@ -65,8 +63,6 @@ export async function POST(req) {
     }
   } catch (err) {
     console.error('Erro webhook:', err)
-    // Return 200 to Stripe even on internal error to avoid retries if it's a logic error, 
-    // but usually 500 is better for retry. However, following the requested code structure which returns 200 at end.
   }
 
   return Response.json({ received: true })
