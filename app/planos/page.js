@@ -19,8 +19,8 @@ export default function PlanosPage() {
       }
 
       const priceId = plan === 'mensal' 
-        ? process.env.NEXT_PUBLIC_STRIPE_PRICE_MENSAL 
-        : process.env.NEXT_PUBLIC_STRIPE_PRICE_ANUAL;
+        ? process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID 
+        : process.env.NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID;
 
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
