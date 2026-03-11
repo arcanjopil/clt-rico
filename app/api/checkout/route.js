@@ -1,10 +1,16 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(req) {
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('Missing STRIPE_SECRET_KEY');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Initialize Stripe inside the handler to avoid build-time errors
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
     const { priceId, userEmail, userId } = await req.json();
 
     if (!priceId || !userEmail || !userId) {
