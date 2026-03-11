@@ -19,9 +19,8 @@ export default function PlanosPage() {
       }
 
       const priceId = plan === 'mensal' 
-        ? 'price_1T8iNjH3YZ3ci68QcowJzHE9'
- 
-        : 'price_1T8iOtH3YZ3ci68QZ8jT1kYx';
+        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_MENSAL || 'price_1T8iNhH3YZ3ci68QcbgDa0ln')
+        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_ANUAL || 'price_1T8iOtH3YZ3ci68QZ8jT1kYx');
 
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
