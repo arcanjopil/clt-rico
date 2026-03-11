@@ -103,8 +103,14 @@ const PRESET_EXPENSES = [
 import Link from 'next/link';
 
 export default function FalidaoApp() {
-  // --- STATE DEFINITIONS (Must be at top) ---
+  const [mounted, setMounted] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // --- STATE DEFINITIONS (Must be at top) ---
+  
   // 1. Auth State
   const [user, setUser] = useState(null);
   const [authView, setAuthView] = useState('login'); // 'login' or 'register'
@@ -1154,6 +1160,10 @@ export default function FalidaoApp() {
     if (lowerDesc.includes('saude') || lowerDesc.includes('farmacia') || lowerDesc.includes('remedio') || lowerDesc.includes('medico')) return <Heart size={16} />;
     return null;
   };
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Carregando...</div>;
+  }
 
   if (!user || authView === 'update_password') {
     return (
