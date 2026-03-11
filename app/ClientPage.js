@@ -104,10 +104,25 @@ import Link from 'next/link';
 
 export default function FalidaoApp() {
   const [mounted, setMounted] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
 
   useEffect(() => {
     setMounted(true);
+    // PWA Install Prompt Listener
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    });
   }, []);
+
+  const handleInstallApp = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
 
   // --- STATE DEFINITIONS (Must be at top) ---
   
@@ -769,8 +784,8 @@ export default function FalidaoApp() {
         title: isFemale ? "Corrida da Rata" : "Corrida do Rato",
         description: "Você está correndo na roda! Precisa organizar as contas.",
         image: isFemale 
-          ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=sad%20tired%20cartoon%20female%20rat%20with%20a%20pink%20bow%20in%20tattered%20clothes%20running%20inside%20a%20hamster%20wheel%2C%20sweating%2C%20stressed%2C%203d%20render%2C%20pixar%20style&image_size=square"
-          : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=sad%20tired%20cartoon%20rat%20in%20tattered%20clothes%20running%20inside%20a%20hamster%20wheel%2C%20sweating%2C%20stressed%2C%203d%20render%2C%20pixar%20style&image_size=square",
+          ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=sad%20tired%20cute%20cartoon%20female%20rat%20with%20a%20pink%20bow%20wearing%20tattered%20clothes%20running%20inside%20a%20hamster%20wheel%2C%20sweating%2C%20stressed%2C%203d%20render%2C%20pixar%20style%2C%20dark%20moody%20lighting&image_size=square"
+          : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=sad%20tired%20cute%20cartoon%20rat%20wearing%20tattered%20clothes%20running%20inside%20a%20hamster%20wheel%2C%20sweating%2C%20stressed%2C%203d%20render%2C%20pixar%20style%2C%20dark%20moody%20lighting&image_size=square",
         color: "#ef4444", // Red
         current: balance,
         target: 0,
@@ -786,8 +801,8 @@ export default function FalidaoApp() {
         title: isFemale ? "Rata Organizada" : "Rato Organizado",
         description: "As contas fecham! Hora de começar a construir sua reserva.",
         image: isFemale 
-          ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=happy%20organized%20cartoon%20female%20rat%20with%20a%20pink%20bow%20wearing%20a%20clean%20blouse%20holding%20a%20calculator%20and%20a%20piggy%20bank%2C%20neat%2C%203d%20render%2C%20pixar%20style&image_size=square"
-          : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=happy%20organized%20cartoon%20rat%20wearing%20a%20clean%20shirt%20holding%20a%20calculator%20and%20a%20piggy%20bank%2C%20neat%2C%203d%20render%2C%20pixar%20style&image_size=square",
+          ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=happy%20organized%20cute%20cartoon%20female%20rat%20with%20a%20pink%20bow%20wearing%20casual%20clean%20clothes%20holding%20a%20calculator%20and%20a%20piggy%20bank%2C%20neat%20home%20office%20background%2C%203d%20render%2C%20pixar%20style%2C%20bright%20lighting&image_size=square"
+          : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=happy%20organized%20cute%20cartoon%20rat%20wearing%20casual%20clean%20clothes%20holding%20a%20calculator%20and%20a%20piggy%20bank%2C%20neat%20home%20office%20background%2C%203d%20render%2C%20pixar%20style%2C%20bright%20lighting&image_size=square",
         color: "#3b82f6", // Blue
         current: totalPatrimony,
         target: userInvestmentGoal * 0.05,
@@ -803,8 +818,8 @@ export default function FalidaoApp() {
         title: isFemale ? "Rata Investidora" : "Rato Investidor",
         description: "Seu dinheiro começou a trabalhar por você. Continue construindo seu patrimônio.",
         image: isFemale 
-          ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=confident%20cartoon%20female%20rat%20with%20a%20pink%20bow%20wearing%20a%20business%20suit%2C%20holding%20a%20stock%20chart%2C%20analyzing%2C%203d%20render%2C%20pixar%20style&image_size=square"
-          : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=confident%20cartoon%20rat%20wearing%20a%20business%20suit%20and%20tie%2C%20holding%20a%20stock%20chart%2C%20analyzing%2C%203d%20render%2C%20pixar%20style&image_size=square",
+          ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=smart%20confident%20cute%20cartoon%20female%20rat%20with%20a%20pink%20bow%20wearing%20business%20casual%20clothes%20analyzing%20a%20growing%20stock%20chart%20hologram%2C%20modern%20office%20background%2C%203d%20render%2C%20pixar%20style&image_size=square"
+          : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=smart%20confident%20cute%20cartoon%20rat%20wearing%20business%20casual%20clothes%20analyzing%20a%20growing%20stock%20chart%20hologram%2C%20modern%20office%20background%2C%203d%20render%2C%20pixar%20style&image_size=square",
         color: "#8b5cf6", // Purple
         current: totalPatrimony,
         target: userInvestmentGoal * 0.40,
@@ -820,8 +835,8 @@ export default function FalidaoApp() {
         title: isFemale ? "Rata Estratégica" : "Rato Estratégico",
         description: "Você domina o jogo! A liberdade está próxima.",
         image: isFemale 
-          ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=wealthy%20cartoon%20female%20rat%20with%20a%20pink%20bow%20wearing%20an%20elegant%20dress%20and%20pearl%20necklace%2C%20holding%20a%20bag%20of%20money%2C%20confident%20smirk%2C%203d%20render%2C%20pixar%20style&image_size=square"
-          : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=wealthy%20cartoon%20rat%20wearing%20a%20tuxedo%20and%20a%20monocle%2C%20holding%20a%20bag%20of%20money%2C%20confident%20smirk%2C%203d%20render%2C%20pixar%20style&image_size=square",
+          ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=wealthy%20sophisticated%20cute%20cartoon%20female%20rat%20with%20a%20pink%20bow%20wearing%20an%20elegant%20business%20suit%2C%20holding%20a%20money%20bag%2C%20luxury%20office%20with%20city%20view%2C%203d%20render%2C%20pixar%20style&image_size=square"
+          : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=wealthy%20sophisticated%20cute%20cartoon%20rat%20wearing%20a%20sharp%20suit%2C%20holding%20a%20money%20bag%2C%20luxury%20office%20with%20city%20view%2C%203d%20render%2C%20pixar%20style&image_size=square",
         color: "#f59e0b", // Amber
         current: totalPatrimony,
         target: userInvestmentGoal,
@@ -836,8 +851,8 @@ export default function FalidaoApp() {
       title: isFemale ? "Rata Livre" : "Rato Livre",
       description: "Você venceu o sistema! Aproveite a vida.",
       image: isFemale 
-        ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=triumphant%20cute%203d%20cartoon%20female%20rat%20with%20a%20pink%20bow%20wearing%20a%20green%20tie%20and%20carrying%20a%20leather%20briefcase%2C%20standing%20on%20stacks%20of%20gold%20coins%2C%20broken%20hamster%20wheel%20in%20background%2C%20money%20bag%2C%20pixar%20style%2C%20bright%20colors%2C%20white%20background&image_size=square"
-        : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=triumphant%20cute%203d%20cartoon%20rat%20wearing%20a%20green%20tie%20and%20carrying%20a%20leather%20briefcase%2C%20standing%20on%20stacks%20of%20gold%20coins%2C%20broken%20hamster%20wheel%20in%20background%2C%20money%20bag%2C%20pixar%20style%2C%20bright%20colors%2C%20white%20background&image_size=square",
+        ? "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=triumphant%20extremely%20rich%20cute%20cartoon%20female%20rat%20with%20a%20pink%20bow%20wearing%20a%20gala%20dress%20and%20tiara%2C%20relaxing%20on%20a%20huge%20pile%20of%20gold%20coins%20on%20a%20tropical%20beach%2C%20sunny%20paradise%2C%203d%20render%2C%20pixar%20style&image_size=square"
+        : "https://coreva-normal.trae.ai/api/ide/v1/text_to_image?prompt=triumphant%20extremely%20rich%20cute%20cartoon%20rat%20wearing%20a%20tuxedo%20and%20top%20hat%2C%20relaxing%20on%20a%20huge%20pile%20of%20gold%20coins%20on%20a%20tropical%20beach%2C%20sunny%20paradise%2C%203d%20render%2C%20pixar%20style&image_size=square",
       color: "#10b981", // Emerald
       current: totalPatrimony,
       target: userInvestmentGoal * 1.5, // Infinite basically
@@ -1371,6 +1386,17 @@ export default function FalidaoApp() {
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Install PWA Button */}
+            {installPrompt && (
+                <button 
+                    onClick={handleInstallApp}
+                    className="flex items-center gap-2 bg-[var(--primary)] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20"
+                >
+                    <Smartphone size={14} />
+                    Instalar
+                </button>
+            )}
+
             {/* Saving Indicator */}
             <div className="hidden md:flex items-center gap-2 mr-2">
                 {savingStatus === 'saving' && (
