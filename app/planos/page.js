@@ -32,16 +32,24 @@ export default function PlanosPage() {
         }),
       });
 
-      const { url } = await res.json();
-      if (url) {
-        window.location.href = url;
+      const data = await res.json();
+      
+      if (!res.ok) {
+        console.error('Checkout API Error:', data);
+        alert(`Erro ao iniciar checkout: ${data.error || 'Erro desconhecido'} (Status: ${res.status})`);
+        setLoading(null);
+        return;
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
       } else {
-        alert('Erro ao iniciar checkout.');
+        alert('Erro: URL de checkout não retornada.');
         setLoading(null);
       }
     } catch (error) {
       console.error(error);
-      alert('Erro ao processar.');
+      alert(`Erro de conexão: ${error.message}`);
       setLoading(null);
     }
   };
