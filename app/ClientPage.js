@@ -990,13 +990,13 @@ export default function FalidaoApp() {
   const handleSubscribe = async (planType) => {
     if (!user) return;
     
-    // Hardcoded Price IDs - Generated automatically via Stripe API
+    // Use env vars or fallback to known working IDs
     const priceId = planType === 'monthly' 
-        ? 'price_1T8iNhH3YZ3ci68QcbgDa0ln' // CLT Rico Pro Mensal (R$ 9.90)
-        : 'price_1T8iOtH3YZ3ci68QZ8jT1kYx'; // CLT Rico Pro Anual (R$ 99.90)
+        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_MENSAL || 'price_1T8iNhH3YZ3ci68QcbgDa0ln')
+        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_ANUAL || 'price_1T8iOtH3YZ3ci68QZ8jT1kYx');
 
     try {
-        const res = await fetch('/api/checkout', {
+        const res = await fetch('/api/create-checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1010,15 +1010,21 @@ export default function FalidaoApp() {
 
         const data = await res.json();
         
+        if (!res.ok) {
+            console.error('Checkout API Error:', data);
+            alert(`Erro ao iniciar pagamento: ${data.error || 'Erro desconhecido'} (Status: ${res.status})`);
+            return;
+        }
+
         if (data.url) {
             window.location.href = data.url;
         } else {
-            console.error('Failed to create checkout session');
-            alert('Erro ao iniciar pagamento. Verifique o console.');
+            console.error('Failed to create checkout session', data);
+            alert('Erro: O servidor não retornou a URL de pagamento.');
         }
     } catch (error) {
         console.error('Error subscribing:', error);
-        alert('Erro ao processar assinatura.');
+        alert(`Erro de conexão ao processar assinatura: ${error.message}`);
     }
   };
 
