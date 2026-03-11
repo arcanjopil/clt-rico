@@ -2819,3 +2819,4 @@ export default function FalidaoApp() {
 /* force update pwa */
 /* force update pwa */
 /* force pwa modal */
+/* force pwa modal */
