@@ -1,7 +1,5 @@
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-
 export async function POST(req) {
   try {
     const { priceId, userId, userEmail } = await req.json()
@@ -15,6 +13,9 @@ export async function POST(req) {
       console.error('Missing STRIPE_SECRET_KEY')
       return Response.json({ error: 'Server configuration error' }, { status: 500 })
     }
+
+    // Initialize Stripe inside the handler to avoid build-time errors
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://cltrico.online'
 

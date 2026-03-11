@@ -1,9 +1,14 @@
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-
 export async function POST(req) {
+  // Initialize Stripe inside the handler
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error('Missing STRIPE_SECRET_KEY')
+    return Response.json({ error: 'Server configuration error' }, { status: 500 })
+  }
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
   let event
