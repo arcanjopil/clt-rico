@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Fixed build error by removing typo */
 :root {
   /* Default Theme (Dark/Original) */
   --bg-app: #0a0a0f;
