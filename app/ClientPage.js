@@ -105,6 +105,8 @@ import Link from 'next/link';
 export default function FalidaoApp() {
   const [mounted, setMounted] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(null);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -113,14 +115,22 @@ export default function FalidaoApp() {
       e.preventDefault();
       setInstallPrompt(e);
     });
+
+    // Detect iOS
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    setIsIOS(ios);
   }, []);
 
   const handleInstallApp = async () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setInstallPrompt(null);
+    if (installPrompt) {
+        installPrompt.prompt();
+        const { outcome } = await installPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setInstallPrompt(null);
+        }
+    } else {
+        // Show manual instructions for iOS or others
+        setShowInstallModal(true);
     }
   };
 
@@ -1372,6 +1382,43 @@ export default function FalidaoApp() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] p-4 md:p-8 font-sans transition-colors duration-300">
+      {/* Install Modal */}
+      {showInstallModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowInstallModal(false)}>
+            <div className="bg-[var(--bg-card)] p-6 rounded-2xl max-w-sm w-full border border-[var(--border-color)] relative" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-[var(--text-secondary)]">✕</button>
+                
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <Smartphone className="text-[var(--primary)]" />
+                    Instalar App
+                </h3>
+
+                {isIOS ? (
+                    <div className="space-y-4">
+                        <p className="text-[var(--text-secondary)]">Para instalar no iPhone/iPad:</p>
+                        <ol className="list-decimal list-inside space-y-2 text-sm text-[var(--text-primary)]">
+                            <li>Toque no botão <strong className="text-[var(--primary)]">Compartilhar</strong> (ícone quadrado com seta) na barra inferior do Safari.</li>
+                            <li>Role para baixo e toque em <strong className="text-[var(--primary)]">Adicionar à Tela de Início</strong>.</li>
+                            <li>Toque em <strong>Adicionar</strong> no canto superior direito.</li>
+                        </ol>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        <p className="text-[var(--text-secondary)]">Para instalar no Android/Chrome:</p>
+                        <ol className="list-decimal list-inside space-y-2 text-sm text-[var(--text-primary)]">
+                            <li>Toque no menu do navegador (três pontinhos).</li>
+                            <li>Selecione <strong className="text-[var(--primary)]">Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                        </ol>
+                    </div>
+                )}
+                
+                <button onClick={() => setShowInstallModal(false)} className="mt-6 w-full py-3 bg-[var(--primary)] rounded-xl font-bold text-white">
+                    Entendi
+                </button>
+            </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header */}
@@ -1387,15 +1434,13 @@ export default function FalidaoApp() {
           
           <div className="flex items-center gap-4">
             {/* Install PWA Button */}
-            {installPrompt && (
-                <button 
-                    onClick={handleInstallApp}
-                    className="flex items-center gap-2 bg-[var(--primary)] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20"
-                >
-                    <Smartphone size={14} />
-                    Instalar
-                </button>
-            )}
+            <button 
+                onClick={handleInstallApp}
+                className="flex items-center gap-2 bg-[var(--primary)] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20"
+            >
+                <Smartphone size={14} />
+                Instalar
+            </button>
 
             {/* Saving Indicator */}
             <div className="hidden md:flex items-center gap-2 mr-2">
