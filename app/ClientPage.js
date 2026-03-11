@@ -2772,3 +2772,4 @@ export default function FalidaoApp() {
 }/* force update */
 /* force update */
 /* force update pwa */
+/* force update pwa */
