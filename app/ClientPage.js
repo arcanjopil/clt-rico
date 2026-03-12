@@ -1501,36 +1501,41 @@ export default function FalidaoApp() {
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-center gap-4 bg-[var(--bg-card)] p-4 md:p-6 rounded-2xl border border-[var(--border-color)] shadow-xl">
-          <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
-            <div className="p-2 md:p-3 bg-[var(--primary-soft)] rounded-xl">
-              <Wallet className="w-6 h-6 md:w-8 md:h-8 text-[var(--primary)]" />
+        <header className="bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)] shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+          
+          {/* Logo & Title */}
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[var(--primary-soft)] rounded-xl shrink-0">
+              <Wallet className="w-6 h-6 text-[var(--primary)]" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent text-center">
               CLT Rico
             </h1>
           </div>
           
-          <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4 w-full md:w-auto">
+          {/* Action Buttons (Mobile: Row, Desktop: Row) */}
+          <div className="flex items-center justify-center gap-2 w-full md:w-auto">
             {/* Virtual Card Button */}
             <button 
                 onClick={() => setShowCardModal(true)}
-                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:opacity-90 transition-all shadow-lg active:scale-95"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-lg active:scale-95 whitespace-nowrap"
             >
-                <CreditCard size={16} />
-                <span className="hidden sm:inline">Carteirinha</span>
-                <span className="sm:hidden">Cartão</span>
+                <CreditCard size={14} />
+                <span>Carteirinha</span>
             </button>
 
             {/* Install PWA Button */}
             <button 
                 onClick={handleInstallApp}
-                className="flex items-center gap-2 bg-[var(--primary)] text-white px-3 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20 active:scale-95"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[var(--primary)] text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20 active:scale-95 whitespace-nowrap"
             >
-                <Smartphone size={16} />
-                Instalar
+                <Smartphone size={14} />
+                <span>Instalar</span>
             </button>
+          </div>
 
+          {/* User Info & Actions (Hidden on tiny screens if needed, but lets keep it accessible) */}
+          <div className="flex items-center gap-2 w-full md:w-auto justify-center md:justify-end border-t md:border-t-0 border-[var(--border-color)] pt-3 md:pt-0 mt-1 md:mt-0">
             {/* Saving Indicator */}
             <div className="hidden lg:flex items-center gap-2 mr-2">
                 {savingStatus === 'saving' && (
