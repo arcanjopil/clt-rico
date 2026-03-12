@@ -3013,12 +3013,8 @@ export default function FalidaoApp() {
       </div>
       
       <div className="text-center text-[10px] text-[var(--text-secondary)] opacity-30 py-8">
-        v1.2 - Final
+        v1.3 - Final
       </div>
     </div>
   );
 }
-/* force deploy v1.1 */
-/* force deploy v1.1 */
-/* force deploy v1.2 FINAL */
-/* force deploy v1.2 FINAL */
