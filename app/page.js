@@ -40,7 +40,20 @@ class ErrorBoundary extends Component {
 
 const ClientPage = dynamic(() => import('./ClientPage'), {
   ssr: false,
-  loading: () => <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Carregando App...</div>
+  loading: () => (
+    <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-4 text-center">
+      <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <h2 className="text-xl font-bold mb-2">Carregando App...</h2>
+      <p className="text-gray-400 text-sm mb-8">Isso pode levar alguns segundos.</p>
+      
+      <button 
+        onClick={() => window.location.reload()} 
+        className="px-4 py-2 bg-white/10 rounded-lg text-sm hover:bg-white/20 transition-colors"
+      >
+        Recarregar Página
+      </button>
+    </div>
+  )
 });
 
 export default function Page() {
