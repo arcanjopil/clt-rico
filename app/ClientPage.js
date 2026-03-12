@@ -2927,3 +2927,4 @@ export default function FalidaoApp() {
 /* force theme update */
 /* force theme update */
 /* force theme fix */
+/* force theme fix */
