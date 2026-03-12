@@ -2920,13 +2920,13 @@ export default function FalidaoApp() {
                                 {/* Monthly Plan */}
                                 <button 
                                     onClick={() => handleSubscribe('monthly')}
-                                    className="w-full group relative p-5 rounded-2xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-all bg-[var(--bg-input)] hover:bg-[var(--primary-soft)]/10 text-left flex justify-between items-center"
+                                    className="w-full group relative p-5 rounded-2xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-all bg-[var(--bg-input)] hover:bg-[var(--primary-soft)]/10 text-left flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
                                 >
                                     <div>
-                                        <div className="font-bold text-[var(--text-primary)] mb-1">Mensal</div>
+                                        <div className="font-bold text-[var(--text-primary)] text-lg mb-1">Mensal</div>
                                         <div className="text-xs text-[var(--text-secondary)]">Pagamento recorrente</div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-left sm:text-right w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--border-color)] sm:border-transparent">
                                         <div className="text-2xl font-bold text-[var(--text-primary)]">R$ 9,90</div>
                                         <div className="text-xs text-[var(--text-secondary)]">/mês</div>
                                     </div>
@@ -2935,16 +2935,16 @@ export default function FalidaoApp() {
                                 {/* Yearly Plan */}
                                 <button 
                                     onClick={() => handleSubscribe('yearly')}
-                                    className="w-full group relative p-5 rounded-2xl border-2 border-yellow-500 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 hover:from-yellow-500/10 hover:to-orange-500/10 transition-all text-left flex justify-between items-center shadow-lg shadow-yellow-500/10"
+                                    className="w-full group relative p-5 rounded-2xl border-2 border-yellow-500 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 hover:from-yellow-500/10 hover:to-orange-500/10 transition-all text-left flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg shadow-yellow-500/10"
                                 >
                                     <div className="absolute -top-3 left-6 bg-gradient-to-r from-yellow-500 to-orange-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md">
                                         ECONOMIZE 17%
                                     </div>
                                     <div>
-                                        <div className="font-bold text-[var(--text-primary)] mb-1">Anual</div>
+                                        <div className="font-bold text-[var(--text-primary)] text-lg mb-1">Anual</div>
                                         <div className="text-xs text-[var(--text-secondary)]">Cobrado anualmente</div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-left sm:text-right w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-yellow-500/20 sm:border-transparent">
                                         <div className="text-2xl font-bold text-[var(--text-primary)]">R$ 99,90</div>
                                         <div className="text-xs text-[var(--text-secondary)]">/ano</div>
                                     </div>
