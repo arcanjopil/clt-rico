@@ -1547,31 +1547,35 @@ export default function FalidaoApp() {
           </div>
           
           {/* Action Buttons */}
-          <div className="flex items-center justify-center md:justify-end gap-3 w-full">
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 w-full">
             {/* Virtual Card Button */}
             <button 
                 onClick={() => setShowCardModal(true)}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-all shadow-lg active:scale-95"
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-lg active:scale-95"
             >
-                <CreditCard size={16} />
+                <CreditCard size={14} />
                 <span>Carteirinha</span>
             </button>
 
             {/* Install PWA Button */}
             <button 
                 onClick={handleInstallApp}
-                className="flex items-center justify-center gap-2 bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20 active:scale-95"
+                className="flex items-center justify-center gap-2 bg-[var(--primary)] text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20 active:scale-95"
             >
-                <Smartphone size={16} />
+                <Smartphone size={14} />
                 <span>Instalar</span>
             </button>
             
-            {/* Theme Toggle (Hidden on mobile to save space, inside menu usually but put here for access) */}
+            {/* Divider */}
+            <div className="w-px h-6 bg-[var(--border-color)] mx-1 hidden sm:block"></div>
+
+            {/* Theme Toggle */}
             <button
                 onClick={() => setShowThemeMenu(!showThemeMenu)}
                 className="p-2 rounded-lg bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors relative"
+                title="Mudar Tema"
             >
-                <Palette size={20} />
+                <Palette size={18} />
                 {showThemeMenu && (
                     <div className="absolute top-full right-0 mt-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-xl p-2 flex flex-col gap-1 z-50 min-w-[150px]">
                         {THEMES.map(t => (
@@ -1589,6 +1593,37 @@ export default function FalidaoApp() {
                         ))}
                     </div>
                 )}
+            </button>
+
+            {/* Subscription Button */}
+            <button
+                onClick={() => setShowSubscriptionModal(true)}
+                className={`p-2 rounded-lg transition-colors ${isPro ? 'bg-yellow-500/20 text-yellow-500' : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-yellow-500'}`}
+                title="Assinatura Premium"
+            >
+                <Crown size={18} className={isPro ? "fill-yellow-500" : ""} />
+            </button>
+
+            {/* Gender Toggle */}
+            <button
+                onClick={() => {
+                    const newGender = userGender === 'male' ? 'female' : 'male';
+                    setUserGender(newGender);
+                    // Optional: Save immediately or let debouncer handle it
+                }}
+                className="p-2 rounded-lg bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors"
+                title="Mudar Gênero do Mascote"
+            >
+                <span className="text-lg leading-none">{userGender === 'male' ? '👨' : '👩'}</span>
+            </button>
+
+            {/* Logout */}
+            <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-red-500 transition-colors"
+                title="Sair"
+            >
+                <LogOut size={18} />
             </button>
           </div>
 
