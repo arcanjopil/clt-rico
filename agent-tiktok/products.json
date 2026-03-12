@@ -1,0 +1,18 @@
+[
+  {
+    "id": "prod_1",
+    "name": "Super Faca 3000",
+    "description": "A faca que corta tudo! Incrível para sua cozinha.",
+    "price": "R$ 99,90",
+    "affiliate_link": "https://example.com/faca3000",
+    "hashtags": ["#cozinha", "#faca", "#chef", "#superfaca"]
+  },
+  {
+    "id": "prod_2",
+    "name": "Relógio Inteligente X",
+    "description": "Monitora seus batimentos, passos e sono. Tecnologia de ponta.",
+    "price": "R$ 199,90",
+    "affiliate_link": "https://example.com/relogiox",
+    "hashtags": ["#smartwatch", "#tech", "#gadgets", "#relogio"]
+  }
+]

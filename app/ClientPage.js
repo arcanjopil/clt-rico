@@ -1543,7 +1543,7 @@ export default function FalidaoApp() {
               <Wallet className="w-8 h-8 text-[var(--primary)]" />
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
-              CLT Rico <span className="text-[10px] opacity-50 font-mono text-[var(--text-secondary)]">v1.1</span>
+              CLT Rico
             </h1>
           </div>
           
@@ -3013,7 +3013,7 @@ export default function FalidaoApp() {
       </div>
       
       <div className="text-center text-[10px] text-[var(--text-secondary)] opacity-30 py-8">
-        v1.0.6 - CLT Rico
+        v1.2 - Final
       </div>
     </div>
   );
