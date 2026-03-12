@@ -2918,3 +2918,4 @@ export default function FalidaoApp() {
 /* force virtual card */
 /* force style update */
 /* force style update */
+/* force mobile header fix */
