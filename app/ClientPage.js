@@ -122,11 +122,6 @@ export default function FalidaoApp() {
     setIsIOS(ios);
   }, []);
 
-  // Apply Theme Effect
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
   const handleInstallApp = async () => {
     if (installPrompt) {
         installPrompt.prompt();
@@ -162,6 +157,11 @@ export default function FalidaoApp() {
   const [userGender, setUserGender] = useState('male');
   const [isDataLoaded, setIsDataLoaded] = useState(false); // Flag to prevent saving before loading
   const [savingStatus, setSavingStatus] = useState('idle'); // idle, saving, saved, error
+
+  // Apply Theme Effect (Moved here to access 'theme')
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   // 3. Fixed Debts State
   const [fixedDebts, setFixedDebts] = useState([]);
