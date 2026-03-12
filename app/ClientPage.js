@@ -122,6 +122,11 @@ export default function FalidaoApp() {
     setIsIOS(ios);
   }, []);
 
+  // Apply Theme Effect
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
   const handleInstallApp = async () => {
     if (installPrompt) {
         installPrompt.prompt();
