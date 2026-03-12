@@ -1,4 +1,4 @@
-const CACHE_NAME = 'clt-rico-v2-fixed'; 
+const CACHE_NAME = 'clt-rico-v3-mobile-fix'; 
 const STATIC_ASSETS = [ 
   '/', 
   '/manifest.json', 
@@ -6,8 +6,9 @@ const STATIC_ASSETS = [
   '/icon-512.png', 
 ]; 
 
+// Force SW Update 2026-03-12-MobileFix
 // Install: cacheia os assets estáticos 
-self.addEventListener('install', (event) => { 
+self.addEventListener('install', (event) => {  
   event.waitUntil( 
     caches.open(CACHE_NAME).then((cache) => { 
       return cache.addAll(STATIC_ASSETS); 
