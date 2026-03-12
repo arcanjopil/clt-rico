@@ -2991,3 +2991,4 @@ export default function FalidaoApp() {
 /* force theme fix */
 /* force premium simulator */
 /* force premium simulator */
+/* force plan alignment */
