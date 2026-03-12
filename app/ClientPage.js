@@ -1374,6 +1374,34 @@ export default function FalidaoApp() {
     );
   }
 
+  const handleSimulatePremium = async () => {
+    if (!user) return;
+    try {
+        // Check if already exists
+        const { data } = await supabase.from('subscriptions').select('id').eq('user_id', user.id).maybeSingle();
+        
+        let error;
+        if (data) {
+            const res = await supabase.from('subscriptions').update({ status: 'active', plan: 'simulated_premium' }).eq('user_id', user.id);
+            error = res.error;
+        } else {
+            const res = await supabase.from('subscriptions').insert({
+                user_id: user.id,
+                status: 'active',
+                plan: 'simulated_premium'
+            });
+            error = res.error;
+        }
+
+        if (error) throw error;
+        alert("Modo Premium Simulado Ativado! A página será recarregada.");
+        window.location.reload();
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao simular premium: " + e.message);
+    }
+  };
+
   // Loading Screen for Data Fetching
   if (!isDataLoaded) {
       return (
@@ -1506,41 +1534,66 @@ export default function FalidaoApp() {
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header */}
-        <header className="bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)] shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+        <header className="bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)] shadow-xl grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
           
           {/* Logo & Title */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center md:justify-start gap-3">
             <div className="p-2 bg-[var(--primary-soft)] rounded-xl shrink-0">
-              <Wallet className="w-6 h-6 text-[var(--primary)]" />
+              <Wallet className="w-8 h-8 text-[var(--primary)]" />
             </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent text-center">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
               CLT Rico
             </h1>
           </div>
           
-          {/* Action Buttons (Mobile: Row, Desktop: Row) */}
-          <div className="flex items-center justify-center gap-2 w-full md:w-auto">
+          {/* Action Buttons */}
+          <div className="flex items-center justify-center md:justify-end gap-3 w-full">
             {/* Virtual Card Button */}
             <button 
                 onClick={() => setShowCardModal(true)}
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-lg active:scale-95 whitespace-nowrap"
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-all shadow-lg active:scale-95"
             >
-                <CreditCard size={14} />
+                <CreditCard size={16} />
                 <span>Carteirinha</span>
             </button>
 
             {/* Install PWA Button */}
             <button 
                 onClick={handleInstallApp}
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[var(--primary)] text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20 active:scale-95 whitespace-nowrap"
+                className="flex items-center justify-center gap-2 bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20 active:scale-95"
             >
-                <Smartphone size={14} />
+                <Smartphone size={16} />
                 <span>Instalar</span>
+            </button>
+            
+            {/* Theme Toggle (Hidden on mobile to save space, inside menu usually but put here for access) */}
+            <button
+                onClick={() => setShowThemeMenu(!showThemeMenu)}
+                className="p-2 rounded-lg bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors relative"
+            >
+                <Palette size={20} />
+                {showThemeMenu && (
+                    <div className="absolute top-full right-0 mt-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-xl p-2 flex flex-col gap-1 z-50 min-w-[150px]">
+                        {THEMES.map(t => (
+                            <button
+                                key={t.id}
+                                onClick={() => {
+                                    setTheme(t.id);
+                                    setShowThemeMenu(false);
+                                }}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${theme === t.id ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'hover:bg-[var(--bg-input)] text-[var(--text-secondary)]'}`}
+                            >
+                                {t.icon}
+                                {t.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </button>
           </div>
 
           {/* User Info & Actions (Hidden on tiny screens if needed, but lets keep it accessible) */}
-          <div className="flex items-center gap-2 w-full md:w-auto justify-center md:justify-end border-t md:border-t-0 border-[var(--border-color)] pt-3 md:pt-0 mt-1 md:mt-0">
+          <div className="hidden">
             {/* Saving Indicator */}
             <div className="hidden lg:flex items-center gap-2 mr-2">
                 {savingStatus === 'saving' && (
@@ -2895,6 +2948,14 @@ export default function FalidaoApp() {
                                         <div className="text-2xl font-bold text-[var(--text-primary)]">R$ 99,90</div>
                                         <div className="text-xs text-[var(--text-secondary)]">/ano</div>
                                     </div>
+                                </button>
+
+                                {/* Dev Simulator Button */}
+                                <button 
+                                    onClick={handleSimulatePremium}
+                                    className="w-full mt-4 text-xs text-[var(--text-secondary)] hover:text-[var(--primary)] underline opacity-50 hover:opacity-100"
+                                >
+                                    (Dev) Simular Premium Ativo
                                 </button>
                             </div>
                         )}
