@@ -3011,30 +3011,10 @@ export default function FalidaoApp() {
           </div>
         )}
       </div>
+      
+      <div className="text-center text-[10px] text-[var(--text-secondary)] opacity-30 py-8">
+        v1.0.6 - CLT Rico
+      </div>
     </div>
   );
-}/* force update */
-/* force update */
-/* force update pwa */
-/* force update pwa */
-/* force pwa modal */
-/* force pwa modal */
-/* force virtual card */
-/* force virtual card */
-/* force style update */
-/* force style update */
-/* force mobile header fix */
-/* force theme update */
-/* force theme update */
-/* force theme fix */
-/* force theme fix */
-/* force premium simulator */
-/* force premium simulator */
-/* force plan alignment */
-/* force plan alignment */
-/* force header icons restore */
-/* force header icons restore */
-/* force theme menu fix */
-/* force theme menu fix */
-/* force theme items */
-/* force theme items */
+}

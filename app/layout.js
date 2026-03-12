@@ -45,9 +45,6 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-[10px] font-bold text-center z-[9999] py-0.5 pointer-events-none opacity-70">
-          V3.5 - RELOAD TO UPDATE
-        </div>
         <SWRegister />
         {children}
       </body>
