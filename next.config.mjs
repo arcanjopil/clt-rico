@@ -11,6 +11,18 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Disable strict mode to avoid double-renders in dev that might confuse
   reactStrictMode: false,
+  generateEtags: false,
+  headers: async () => [
+    {
+      source: '/:path*',
+      headers: [
+        {
+          key: 'Cache-Control',
+          value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      ],
+    },
+  ],
 };
 
 export default nextConfig;

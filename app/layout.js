@@ -20,6 +20,9 @@ export const viewport = {
   themeColor: "#6366f1",
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata = {
   title: "CLT Rico",
   description: "Seu caminho de CLT para Rico - Controle Financeiro Gamificado",
@@ -33,6 +36,9 @@ export const metadata = {
     statusBarStyle: "black-translucent",
     title: "CLT Rico",
   },
+  other: {
+    'build-timestamp': new Date().toISOString(),
+  }
 };
 
 export default function RootLayout({ children }) {
