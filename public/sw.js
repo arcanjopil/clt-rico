@@ -60,4 +60,4 @@ self.addEventListener('fetch', (event) => {
         }); 
       }) 
   ); 
-});
+});/* force cache v3 */
