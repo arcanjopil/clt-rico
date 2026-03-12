@@ -1418,8 +1418,8 @@ export default function FalidaoApp() {
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] p-4 md:p-8 font-sans transition-colors duration-300 relative">
       {/* DEBUG BANNER - REMOVE LATER */}
-      <div className="fixed top-0 left-0 right-0 bg-pink-600 text-white text-center font-bold z-[9999] p-2 animate-pulse shadow-lg">
-        VERSÃO v5.0 - NO CACHE MODE (LIMPEZA TOTAL)
+      <div className="fixed top-0 left-0 right-0 bg-orange-600 text-white text-center font-bold z-[9999] p-2 animate-pulse shadow-lg">
+        VERSÃO v5.1 - ÍCONES RESTAURADOS (VERIFIQUE O TOPO)
       </div>
 
       {/* Virtual Card Modal */}
@@ -1556,86 +1556,80 @@ export default function FalidaoApp() {
           </div>
           
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 w-full md:w-auto">
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 w-full md:w-auto">
+            
+            {/* Theme Toggle - Force Visible */}
+            <button
+                onClick={() => setShowThemeMenu(!showThemeMenu)}
+                className="p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] transition-all shadow-sm"
+                title="Mudar Tema"
+            >
+                <Palette size={20} />
+            </button>
+            {showThemeMenu && (
+                <div className="absolute top-20 right-4 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-2xl p-2 flex flex-col gap-1 z-[60] min-w-[150px]">
+                    {THEMES.map(t => (
+                        <button
+                            key={t.id}
+                            onClick={() => {
+                                setTheme(t.id);
+                                setShowThemeMenu(false);
+                            }}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm w-full text-left ${theme === t.id ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'hover:bg-[var(--bg-input)] text-[var(--text-primary)]'}`}
+                        >
+                            {t.icon}
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* Gender Toggle - Force Visible */}
+            <button
+                onClick={() => setUserGender(userGender === 'male' ? 'female' : 'male')}
+                className="p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] transition-all shadow-sm"
+                title="Mudar Gênero"
+            >
+                <span className="text-xl leading-none">{userGender === 'male' ? '👨' : '👩'}</span>
+            </button>
+
+            {/* Subscription Button - Force Visible */}
+            <button
+                onClick={() => setShowSubscriptionModal(true)}
+                className={`p-2.5 rounded-xl border border-[var(--border-color)] transition-all shadow-sm ${isPro ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/50' : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-yellow-500'}`}
+                title="Assinatura"
+            >
+                <Crown size={20} className={isPro ? "fill-yellow-500" : ""} />
+            </button>
+
+            {/* Logout - Force Visible */}
+            <button
+                onClick={handleLogout}
+                className="p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] hover:bg-red-500 hover:text-white transition-all shadow-sm text-red-400"
+                title="Sair"
+            >
+                <LogOut size={20} />
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-8 bg-[var(--border-color)] mx-1 hidden sm:block"></div>
+
             {/* Virtual Card Button */}
             <button 
                 onClick={() => setShowCardModal(true)}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-lg active:scale-95"
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-lg active:scale-95"
             >
-                <CreditCard size={14} />
-                <span>Carteirinha</span>
+                <CreditCard size={16} />
+                <span className="hidden sm:inline">Carteirinha</span>
             </button>
 
             {/* Install PWA Button */}
             <button 
                 onClick={handleInstallApp}
-                className="flex items-center justify-center gap-2 bg-[var(--primary)] text-white px-3 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20 active:scale-95"
+                className="flex items-center justify-center gap-2 bg-[var(--primary)] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all animate-pulse shadow-lg shadow-purple-500/20 active:scale-95"
             >
-                <Smartphone size={14} />
-                <span>Instalar</span>
-            </button>
-            
-            {/* Divider */}
-            <div className="w-px h-6 bg-[var(--border-color)] mx-1 hidden sm:block"></div>
-
-            {/* Theme Toggle */}
-            <div className="relative">
-                <button
-                    onClick={() => setShowThemeMenu(!showThemeMenu)}
-                    className="p-2 rounded-lg bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors"
-                    title="Mudar Tema"
-                >
-                    <Palette size={18} />
-                </button>
-                
-                {showThemeMenu && (
-                    <div className="absolute top-full right-0 mt-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-xl p-2 flex flex-col gap-1 z-50 min-w-[150px]">
-                        {THEMES.map(t => (
-                            <button
-                                key={t.id}
-                                onClick={() => {
-                                    setTheme(t.id);
-                                    setShowThemeMenu(false);
-                                }}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm w-full text-left ${theme === t.id ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'hover:bg-[var(--bg-input)] text-[var(--text-primary)]'}`}
-                            >
-                                {t.icon}
-                                {t.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Subscription Button */}
-            <button
-                onClick={() => setShowSubscriptionModal(true)}
-                className={`p-2 rounded-lg transition-colors ${isPro ? 'bg-yellow-500/20 text-yellow-500' : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-yellow-500'}`}
-                title="Assinatura Premium"
-            >
-                <Crown size={18} className={isPro ? "fill-yellow-500" : ""} />
-            </button>
-
-            {/* Gender Toggle */}
-            <button
-                onClick={() => {
-                    const newGender = userGender === 'male' ? 'female' : 'male';
-                    setUserGender(newGender);
-                    // Optional: Save immediately or let debouncer handle it
-                }}
-                className="p-2 rounded-lg bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors"
-                title="Mudar Gênero do Mascote"
-            >
-                <span className="text-lg leading-none">{userGender === 'male' ? '👨' : '👩'}</span>
-            </button>
-
-            {/* Logout */}
-            <button
-                onClick={handleLogout}
-                className="p-2 rounded-lg bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-red-500 transition-colors"
-                title="Sair"
-            >
-                <LogOut size={18} />
+                <Smartphone size={16} />
+                <span className="hidden sm:inline">Instalar</span>
             </button>
           </div>
 
@@ -3021,7 +3015,7 @@ export default function FalidaoApp() {
       </div>
       
       <div className="text-center text-[10px] text-[var(--text-secondary)] opacity-30 py-8">
-        v5.0 - Final
+        v5.1 - Final
       </div>
     </div>
   );
