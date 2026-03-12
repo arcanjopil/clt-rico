@@ -3028,3 +3028,4 @@ export default function FalidaoApp() {
 /* force premium simulator */
 /* force plan alignment */
 /* force plan alignment */
+/* force header icons restore */
