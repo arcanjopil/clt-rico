@@ -3036,3 +3036,4 @@ export default function FalidaoApp() {
 /* force header icons restore */
 /* force theme menu fix */
 /* force theme menu fix */
+/* force theme items */
