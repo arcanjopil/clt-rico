@@ -1,4 +1,4 @@
-const CACHE_NAME = 'clt-rico-v3-mobile-fix'; 
+const CACHE_NAME = 'clt-rico-v3.5-debug'; 
 const STATIC_ASSETS = [ 
   '/', 
   '/manifest.json', 
