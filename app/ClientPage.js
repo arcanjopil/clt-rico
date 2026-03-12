@@ -1418,8 +1418,8 @@ export default function FalidaoApp() {
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] p-4 md:p-8 font-sans transition-colors duration-300 relative">
       {/* DEBUG BANNER - REMOVE LATER */}
-      <div className="fixed top-0 left-0 right-0 bg-green-600 text-white text-center font-bold z-[9999] p-2 animate-pulse shadow-lg">
-        VERSÃO FINAL v4.0 - ATUALIZADA AGORA (AGUARDE 1 MIN)
+      <div className="fixed top-0 left-0 right-0 bg-purple-600 text-white text-center font-bold z-[9999] p-2 animate-pulse shadow-lg">
+        VERSÃO v4.1 - HEADER CORRIGIDO (VERIFIQUE O TOPO)
       </div>
 
       {/* Virtual Card Modal */}
@@ -1540,20 +1540,23 @@ export default function FalidaoApp() {
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header */}
-        <header className="bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)] shadow-xl grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <header className="bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)] shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 sticky top-4 z-40">
           
           {/* Logo & Title */}
-          <div className="flex items-center justify-center md:justify-start gap-3">
-            <div className="p-2 bg-[var(--primary-soft)] rounded-xl shrink-0">
-              <Wallet className="w-8 h-8 text-[var(--primary)]" />
+          <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-[var(--primary-soft)] rounded-xl shrink-0">
+                <Wallet className="w-8 h-8 text-[var(--primary)]" />
+              </div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                CLT Rico
+              </h1>
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] bg-clip-text text-transparent">
-              CLT Rico
-            </h1>
+            {/* Mobile Only: Theme Switcher could go here if needed, but let's keep it right */}
           </div>
           
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 w-full">
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 w-full md:w-auto">
             {/* Virtual Card Button */}
             <button 
                 onClick={() => setShowCardModal(true)}
