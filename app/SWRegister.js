@@ -39,3 +39,4 @@ export default function SWRegister() {
 
   return null;
 }/* force sw update */
+/* force sw update */
