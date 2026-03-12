@@ -8,7 +8,8 @@ import {
 } from "recharts";
 import { 
   Wallet, TrendingDown, TrendingUp, DollarSign, Trash2, Edit2, Plus, 
-  LayoutDashboard, List, Receipt, AlertCircle, Target, BookOpen, Briefcase, Activity, CheckCircle2, AlertTriangle, Calculator, Sparkles, Percent, Palette, Crown, ShoppingCart, Film, Utensils, ShoppingBag, CreditCard, Tv, Youtube, Music, Car, Coffee, Smartphone, Home, Heart, Zap, Coins, ShieldCheck, Calendar, LogOut, User, Mail, Lock, Loader2
+  LayoutDashboard, List, Receipt, AlertCircle, Target, BookOpen, Briefcase, Activity, CheckCircle2, AlertTriangle, Calculator, Sparkles, Percent, Palette, Crown, ShoppingCart, Film, Utensils, ShoppingBag, CreditCard, Tv, Youtube, Music, Car, Coffee, Smartphone, Home, Heart, Zap, Coins, ShieldCheck, Calendar, LogOut, User, Mail, Lock, Loader2,
+  Moon, Sun, CloudRain, Trees
 } from "lucide-react";
 
 // Initial mock data
@@ -83,10 +84,10 @@ const ASSET_YIELDS = {
 };
 
 const THEMES = [
-  { id: 'default', name: 'Dark Original', color: '#0a0a0f' },
-  { id: 'light', name: 'Light Mode', color: '#f3f4f6' },
-  { id: 'midnight', name: 'Midnight Blue', color: '#0f172a' },
-  { id: 'forest', name: 'Forest Green', color: '#052e16' },
+  { id: 'default', label: 'Dark Original', icon: <Moon size={16} />, color: '#0a0a0f' },
+  { id: 'light', label: 'Claro', icon: <Sun size={16} />, color: '#f3f4f6' },
+  { id: 'midnight', label: 'Midnight', icon: <CloudRain size={16} />, color: '#0f172a' },
+  { id: 'forest', label: 'Floresta', icon: <Trees size={16} />, color: '#052e16' },
 ];
 
 const PRESET_EXPENSES = [
@@ -1588,7 +1589,7 @@ export default function FalidaoApp() {
                                     setTheme(t.id);
                                     setShowThemeMenu(false);
                                 }}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm w-full text-left ${theme === t.id ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'hover:bg-[var(--bg-input)] text-[var(--text-secondary)]'}`}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm w-full text-left ${theme === t.id ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'hover:bg-[var(--bg-input)] text-[var(--text-primary)]'}`}
                             >
                                 {t.icon}
                                 {t.label}
