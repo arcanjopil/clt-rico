@@ -3021,7 +3021,7 @@ export default function FalidaoApp() {
       </div>
       
       <div className="text-center text-[10px] text-[var(--text-secondary)] opacity-30 py-8">
-        v1.3 - Final
+        v5.0 - Final
       </div>
     </div>
   );
