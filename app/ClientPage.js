@@ -2918,3 +2918,4 @@ export default function FalidaoApp() {
 /* force pwa modal */
 /* force pwa modal */
 /* force virtual card */
+/* force virtual card */
