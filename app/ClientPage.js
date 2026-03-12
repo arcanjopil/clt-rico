@@ -1416,7 +1416,12 @@ export default function FalidaoApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] p-4 md:p-8 font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] p-4 md:p-8 font-sans transition-colors duration-300 relative">
+      {/* DEBUG BANNER - REMOVE LATER */}
+      <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-center font-bold z-[9999] p-2 animate-pulse shadow-lg">
+        VERSÃO 1.4 - ATUALIZADA AGORA (SE VÊ ISSO, FUNCIONOU)
+      </div>
+
       {/* Virtual Card Modal */}
       {showCardModal && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowCardModal(false)}>
