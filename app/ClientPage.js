@@ -3033,3 +3033,4 @@ export default function FalidaoApp() {
 /* force plan alignment */
 /* force header icons restore */
 /* force header icons restore */
+/* force theme menu fix */
