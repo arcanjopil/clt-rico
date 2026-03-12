@@ -2925,3 +2925,4 @@ export default function FalidaoApp() {
 /* force style update */
 /* force mobile header fix */
 /* force theme update */
+/* force theme update */
