@@ -107,6 +107,7 @@ export default function FalidaoApp() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [isIOS, setIsIOS] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showCardModal, setShowCardModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -1382,6 +1383,84 @@ export default function FalidaoApp() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] p-4 md:p-8 font-sans transition-colors duration-300">
+      {/* Virtual Card Modal */}
+      {showCardModal && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowCardModal(false)}>
+            <div className="relative w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setShowCardModal(false)} className="absolute -top-10 right-0 text-white hover:text-gray-300">
+                    <Trash2 className="rotate-45" size={24} /> Fechar
+                </button>
+                
+                {/* The Card */}
+                <div 
+                    className="aspect-[1.58/1] w-full rounded-2xl p-6 relative overflow-hidden shadow-2xl flex flex-col justify-between border border-white/10"
+                    style={{ 
+                        background: `linear-gradient(135deg, ${mascotStatus.color} 0%, #000000 100%)`,
+                        boxShadow: `0 0 40px ${mascotStatus.color}40`
+                    }}
+                >
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
+                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+                    
+                    {/* Top Row */}
+                    <div className="relative z-10 flex justify-between items-start">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Wallet className="text-white/90" size={20} />
+                                <span className="font-bold text-white tracking-wider">CLT Rico</span>
+                            </div>
+                            <div className="text-xs text-white/60 font-mono uppercase tracking-[0.2em]">MEMBER CARD</div>
+                        </div>
+                        <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                            <span className="text-xs font-bold text-white uppercase">{mascotStatus.title}</span>
+                        </div>
+                    </div>
+
+                    {/* Middle Row - Mascot & Level */}
+                    <div className="relative z-10 flex items-center gap-4 my-4">
+                        <div className="w-20 h-20 rounded-full border-2 border-white/30 overflow-hidden bg-black/20 shadow-lg">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={mascotStatus.image} alt="Mascot" className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                            <div className="text-2xl font-bold text-white drop-shadow-md">{user?.name || 'Viajante'}</div>
+                            <div className="text-sm text-white/80">Nível {mascotStatus.level}</div>
+                        </div>
+                    </div>
+
+                    {/* Bottom Row - Stats */}
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <div className="text-[10px] text-white/60 uppercase mb-1">Patrimônio Total</div>
+                                <div className="text-xl font-mono font-bold text-white tracking-tight">
+                                    {formatCurrency(totalPatrimony)}
+                                </div>
+                            </div>
+                            
+                            {/* Fake Chip */}
+                            <div className="w-10 h-8 rounded bg-gradient-to-br from-yellow-200 to-yellow-600 opacity-80 flex items-center justify-center overflow-hidden">
+                                <div className="w-full h-[1px] bg-black/20 my-[2px]"></div>
+                                <div className="absolute w-[1px] h-full bg-black/20 mx-[2px]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-6 text-center space-y-4">
+                    <p className="text-gray-400 text-sm">Tire um print da tela para compartilhar sua evolução! 📸</p>
+                    <button 
+                        onClick={() => setShowCardModal(false)}
+                        className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl font-bold text-white transition-colors"
+                    >
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* Install Modal */}
       {showInstallModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowInstallModal(false)}>
@@ -1433,6 +1512,24 @@ export default function FalidaoApp() {
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Virtual Card Button */}
+            <button 
+                onClick={() => setShowCardModal(true)}
+                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-lg"
+            >
+                <CreditCard size={14} />
+                Carteirinha
+            </button>
+
+            {/* Virtual Card Button - Mobile */}
+            <button 
+                onClick={() => setShowCardModal(true)}
+                className="md:hidden flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-lg"
+            >
+                <CreditCard size={14} />
+                Cartão
+            </button>
+
             {/* Install PWA Button */}
             <button 
                 onClick={handleInstallApp}
