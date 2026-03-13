@@ -1022,21 +1022,15 @@ export default function FalidaoApp() {
   const handleSubscribe = async (planType) => {
     if (!user) return;
     
-    // Use env vars or fallback to known working IDs
-    const priceId = planType === 'monthly' 
-        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_MENSAL || 'price_1T8iNhH3YZ3ci68QcbgDa0ln')
-        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_ANUAL || 'price_1T8iOtH3YZ3ci68QZ8jT1kYx');
-
+    // Plan Type: 'mensal', 'anual', 'vitalicio'
     try {
-        const res = await fetch('/api/create-checkout', {
+        const res = await fetch('/api/checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                priceId,
-                userEmail: user.email,
-                userId: user.id,
+                plan: planType
             }),
         });
 
@@ -1418,8 +1412,8 @@ export default function FalidaoApp() {
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] p-4 md:p-8 font-sans transition-colors duration-300 relative">
       {/* DEBUG BANNER - REMOVE LATER */}
-      <div className="fixed top-0 left-0 right-0 bg-orange-600 text-white text-center font-bold z-[9999] p-2 animate-pulse shadow-lg">
-        VERSÃO v5.1 - ÍCONES RESTAURADOS (VERIFIQUE O TOPO)
+      <div className="fixed top-0 left-0 right-0 bg-emerald-600 text-white text-center font-bold z-[9999] p-2 animate-pulse shadow-lg">
+        VERSÃO v5.2 - PAGAMENTOS REAIS (STRIPE)
       </div>
 
       {/* Virtual Card Modal */}
@@ -2960,7 +2954,7 @@ export default function FalidaoApp() {
                             <div className="space-y-4">
                                 {/* Monthly Plan */}
                                 <button 
-                                    onClick={() => handleSubscribe('monthly')}
+                                    onClick={() => handleSubscribe('mensal')}
                                     className="w-full group relative p-5 rounded-2xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-all bg-[var(--bg-input)] hover:bg-[var(--primary-soft)]/10 text-left flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
                                 >
                                     <div>
@@ -2975,19 +2969,37 @@ export default function FalidaoApp() {
                                 
                                 {/* Yearly Plan */}
                                 <button 
-                                    onClick={() => handleSubscribe('yearly')}
+                                    onClick={() => handleSubscribe('anual')}
                                     className="w-full group relative p-5 rounded-2xl border-2 border-yellow-500 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 hover:from-yellow-500/10 hover:to-orange-500/10 transition-all text-left flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg shadow-yellow-500/10"
                                 >
                                     <div className="absolute -top-3 left-6 bg-gradient-to-r from-yellow-500 to-orange-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md">
-                                        ECONOMIZE 17%
+                                        MAIS POPULAR
                                     </div>
                                     <div>
                                         <div className="font-bold text-[var(--text-primary)] text-lg mb-1">Anual</div>
                                         <div className="text-xs text-[var(--text-secondary)]">Cobrado anualmente</div>
                                     </div>
                                     <div className="text-left sm:text-right w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-yellow-500/20 sm:border-transparent">
-                                        <div className="text-2xl font-bold text-[var(--text-primary)]">R$ 99,90</div>
-                                        <div className="text-xs text-[var(--text-secondary)]">/ano</div>
+                                        <div className="text-2xl font-bold text-[var(--text-primary)]">R$ 97,00</div>
+                                        <div className="text-xs text-[var(--text-secondary)]">Economize 18%</div>
+                                    </div>
+                                </button>
+
+                                {/* Lifetime Plan */}
+                                <button 
+                                    onClick={() => handleSubscribe('vitalicio')}
+                                    className="w-full group relative p-5 rounded-2xl border-2 border-purple-500 bg-gradient-to-r from-purple-500/5 to-pink-500/5 hover:from-purple-500/10 hover:to-pink-500/10 transition-all text-left flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg shadow-purple-500/10"
+                                >
+                                    <div className="absolute -top-3 right-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md animate-pulse">
+                                        OFERTA ÚNICA
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-[var(--text-primary)] text-lg mb-1">Vitalício</div>
+                                        <div className="text-xs text-[var(--text-secondary)]">Acesso para sempre. Sem mensalidade.</div>
+                                    </div>
+                                    <div className="text-left sm:text-right w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-purple-500/20 sm:border-transparent">
+                                        <div className="text-2xl font-bold text-[var(--text-primary)]">R$ 297,00</div>
+                                        <div className="text-xs text-[var(--text-secondary)]">Pagamento único</div>
                                     </div>
                                 </button>
 
@@ -3015,7 +3027,7 @@ export default function FalidaoApp() {
       </div>
       
       <div className="text-center text-[10px] text-[var(--text-secondary)] opacity-30 py-8">
-        v5.1 - Final
+        v5.2 - Final
       </div>
     </div>
   );

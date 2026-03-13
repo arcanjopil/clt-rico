@@ -11,6 +11,15 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Disable strict mode to avoid double-renders in dev that might confuse
   reactStrictMode: false,
+  // Allow localtunnel
+  allowedDevOrigins: [
+    "localhost:3000",
+    "eleven-phones-type.loca.lt",
+    "solid-windows-beam.loca.lt",
+    "red-hands-slide.loca.lt",
+    "beige-turtles-sip.loca.lt"
+  ],
+  experimental: {},
   generateEtags: false,
   headers: async () => [
     {

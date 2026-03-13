@@ -1,43 +1,65 @@
-import Stripe from 'stripe';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { stripe } from '../../../lib/stripe';
+
+// IDs dos Planos no Stripe (Você precisará criar esses produtos no painel do Stripe e pegar os IDs)
+const PLANS = {
+  mensal: {
+    priceId: process.env.STRIPE_PRICE_ID_MENSAL, // Ex: price_1Op...
+    mode: 'subscription',
+  },
+  anual: {
+    priceId: process.env.STRIPE_PRICE_ID_ANUAL, // Ex: price_1Op...
+    mode: 'subscription',
+  },
+  vitalicio: {
+    priceId: process.env.STRIPE_PRICE_ID_VITALICIO, // Ex: price_1Op...
+    mode: 'payment', // Pagamento único
+  },
+};
 
 export async function POST(req) {
   try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('Missing STRIPE_SECRET_KEY');
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    const { plan } = await req.json();
+    const planConfig = PLANS[plan];
+
+    if (!planConfig) {
+      return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
     }
 
-    // Initialize Stripe inside the handler to avoid build-time errors
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    // Verificar Usuário Logado
+    const supabase = createRouteHandlerClient({ cookies });
+    const { data: { session } } = await supabase.auth.getSession();
 
-    const { priceId, userEmail, userId } = await req.json();
-
-    if (!priceId || !userEmail || !userId) {
-      return NextResponse.json({ error: 'Missing priceId, userEmail, or userId' }, { status: 400 });
+    if (!session) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    // Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
+    const user = session.user;
+
+    // Criar Sessão de Checkout no Stripe
+    const sessionStripe = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
-          price: priceId,
+          price: planConfig.priceId,
           quantity: 1,
         },
       ],
-      mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/?success=true`,
-      cancel_url: `${req.headers.get('origin')}/?canceled=true`,
-      customer_email: userEmail,
+      mode: planConfig.mode,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/?canceled=true`,
+      customer_email: user.email,
       metadata: {
-        userId: userId,
+        userId: user.id,
+        plan: plan,
       },
     });
 
-    return NextResponse.json({ sessionId: session.id, url: session.url });
-  } catch (err) {
-    console.error('Error creating checkout session:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ url: sessionStripe.url });
+  } catch (error) {
+    console.error('Erro no Checkout:', error);
+    return NextResponse.json({ error: 'Erro interno ao processar pagamento' }, { status: 500 });
   }
 }

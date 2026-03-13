@@ -1,74 +1,56 @@
-import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { stripe } from '../../../lib/stripe';
+import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from 'next/server';
+
+// Create a Supabase admin client to update users
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY // Needs service role key to update other users' data
+);
 
 export async function POST(req) {
-  // Initialize Stripe inside the handler
-  if (!process.env.STRIPE_SECRET_KEY) {
-    console.error('Missing STRIPE_SECRET_KEY')
-    return Response.json({ error: 'Server configuration error' }, { status: 500 })
-  }
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+  const body = await req.text();
+  const signature = req.headers.get('stripe-signature');
 
-  const body = await req.text()
-  const sig = req.headers.get('stripe-signature')
-  let event
+  let event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
   } catch (err) {
-    console.error('Webhook signature error:', err.message)
-    return Response.json({ error: err.message }, { status: 400 })
+    console.error(`Webhook Error: ${err.message}`);
+    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
+  // Handle the event
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const userId = session.metadata.userId;
+    const plan = session.metadata.plan;
 
-  try {
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object
-      const userId = session.metadata?.userId
-      if (!userId) return Response.json({ received: true })
+    console.log(`Processing subscription for user ${userId} plan ${plan}`);
 
-      const subscription = await stripe.subscriptions.retrieve(session.subscription)
-      const priceId = subscription.items.data[0]?.price?.id
-
-      // Mensal se bater com o price ID mensal, senão anual
-      const plan = priceId === process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ? 'mensal' : 'anual'
-      const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
-
-      const { error } = await supabase.from('subscriptions').upsert({
+    // Update user subscription in Supabase
+    // Using upsert to create if not exists or update if exists
+    const { error } = await supabaseAdmin
+      .from('subscriptions')
+      .upsert({
         user_id: userId,
+        status: 'active',
+        plan: plan,
         stripe_customer_id: session.customer,
         stripe_subscription_id: session.subscription,
-        plan,
-        status: 'active',
-        current_period_end: periodEnd,
-      }, { onConflict: 'user_id' })
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' }); // Assuming user_id is unique in subscriptions table or PK
 
-      if (error) console.error('Supabase error:', error)
+    if (error) {
+      console.error('Supabase update error:', error);
+      return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
     }
-
-    if (event.type === 'customer.subscription.updated') {
-      const sub = event.data.object
-      await supabase.from('subscriptions')
-        .update({ 
-          status: sub.status, 
-          current_period_end: new Date(sub.current_period_end * 1000).toISOString() 
-        })
-        .eq('stripe_subscription_id', sub.id)
-    }
-
-    if (event.type === 'customer.subscription.deleted') {
-      const sub = event.data.object
-      await supabase.from('subscriptions')
-        .update({ status: 'canceled' })
-        .eq('stripe_subscription_id', sub.id)
-    }
-  } catch (err) {
-    console.error('Erro webhook:', err)
   }
 
-  return Response.json({ received: true })
+  return NextResponse.json({ received: true });
 }

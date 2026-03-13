@@ -1,6 +1,6 @@
 {
   "name": "falidao",
-  "version": "5.1.0",
+  "version": "5.2.0",
   "private": true,
   "engines": {
     "node": ">=20.0.0 <23.0.0"
@@ -13,6 +13,7 @@
     "lint": "echo 'Skipping lint for build speed'"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^8.9.0",
     "@supabase/supabase-js": "^2.98.0",
     "canvas-confetti": "^1.9.4",
     "lucide-react": "^0.577.0",
