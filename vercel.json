@@ -2,5 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "outputDirectory": ".next",
-  "ignoreCommand": "echo 'ALWAYS_BUILD'"
+  "ignoreCommand": "exit 1"
 }
