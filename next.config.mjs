@@ -17,7 +17,8 @@ const nextConfig = {
     "eleven-phones-type.loca.lt",
     "solid-windows-beam.loca.lt",
     "red-hands-slide.loca.lt",
-    "beige-turtles-sip.loca.lt"
+    "beige-turtles-sip.loca.lt",
+    "true-plants-lie.loca.lt"
   ],
   experimental: {},
   generateEtags: false,
