@@ -1,6 +1,6 @@
 {
   "name": "falidao",
-  "version": "5.2.0",
+  "version": "6.0.0",
   "private": true,
   "engines": {
     "node": ">=20.0.0 <23.0.0"
