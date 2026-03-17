@@ -1674,19 +1674,7 @@ export default function FalidaoApp() {
               <Edit2 size={14} className="text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity mr-2" />
             </div>
           </div>
-                <span>⭐</span>
-                <span className="hidden md:inline">Seja Premium</span>
-              </Link>
-            )}
-            
-            {isPro && (
-               <div className="p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-500 flex items-center gap-2">
-                  <Crown size={20} className="fill-yellow-500" />
-                  <span className="text-xs font-bold hidden md:inline">PREMIUM</span>
-               </div>
-            )}
-           </div>
-         </header>
+        </header>
 
         {/* Navigation Tabs */}
         <nav className="flex flex-wrap gap-2 bg-[var(--bg-card)] p-1 rounded-xl w-fit mx-auto md:mx-0 border border-[var(--border-color)]">
