@@ -73,7 +73,7 @@ export async function GET(req) {
       if (totalDividendsEstimate > 0) {
         // 4. Send Email via Resend
         await resend.emails.send({
-          from: 'CLT Rico <relatorios@cltrico.online>', // You need to configure this domain in Resend
+          from: 'CLT Rico <onboarding@resend.dev>', // Using Resend testing domain
           to: email,
           subject: '💰 Seu Relatório de Dividendos Chegou!',
           html: `
