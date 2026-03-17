@@ -64,6 +64,7 @@ export async function POST(req) {
       success_url: `${baseUrl}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/planos`,
       customer_email: user.email,
+      client_reference_id: user.id,
       metadata: metadata,
     });
 
