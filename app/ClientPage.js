@@ -1635,9 +1635,9 @@ export default function FalidaoApp() {
           </div>
 
           {/* User Info & Actions (Hidden on tiny screens if needed, but lets keep it accessible) */}
-          <div className="hidden">
+          <div className="hidden lg:flex items-center gap-4">
             {/* Saving Indicator */}
-            <div className="hidden lg:flex items-center gap-2 mr-2">
+            <div className="hidden xl:flex items-center gap-2 mr-2">
                 {savingStatus === 'saving' && (
                     <span className="flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] animate-pulse">
                         <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
@@ -1658,21 +1658,9 @@ export default function FalidaoApp() {
                 )}
             </div>
 
-            <div className="hidden md:flex flex-col items-end">
-                <span className="text-sm font-bold text-[var(--text-primary)]">{user?.name}</span>
-                <span className="text-xs text-[var(--text-secondary)]">{user?.email}</span>
-            </div>
-            
-            <button 
-                onClick={handleLogout}
-                className="p-3 bg-[var(--bg-input)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] rounded-xl border border-[var(--border-color)] transition-colors"
-                title="Sair"
-            >
-                <LogOut size={20} />
-            </button>
-
+            {/* Salary Input */}
             <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group">
-              <span className="text-[var(--text-secondary)] text-sm font-medium pl-2">Salário Mensal:</span>
+              <span className="text-[var(--text-secondary)] text-sm font-medium pl-2">Salário:</span>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">R$</span>
                 <input 
@@ -1680,53 +1668,12 @@ export default function FalidaoApp() {
                   value={salary || ''} 
                   placeholder="0,00"
                   onChange={(e) => setSalary(Number(e.target.value))}
-                  className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-32 pl-8 py-1 focus:ring-0 placeholder-gray-500"
+                  className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-28 pl-8 py-1 focus:ring-0 placeholder-gray-500"
                 />
               </div>
               <Edit2 size={14} className="text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity mr-2" />
             </div>
-
-            {/* Gender Toggle */}
-            <button 
-              onClick={() => setUserGender(prev => prev === 'male' ? 'female' : 'male')}
-              className="p-3 bg-[var(--bg-input)] hover:bg-[var(--primary-soft)] rounded-xl border border-[var(--border-color)] transition-colors text-xl"
-              title={userGender === 'male' ? "Mudar para Feminino" : "Mudar para Masculino"}
-            >
-              {userGender === 'male' ? '👨' : '👩'}
-            </button>
-
-            {/* Theme Selector */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowThemeMenu(!showThemeMenu)}
-                className="p-3 bg-[var(--bg-input)] hover:bg-[var(--primary-soft)] rounded-xl border border-[var(--border-color)] transition-colors"
-                title="Alterar Tema"
-              >
-                <Palette size={20} className="text-[var(--text-secondary)] hover:text-[var(--primary)]" />
-              </button>
-              
-              {showThemeMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-2xl z-50 overflow-hidden">
-                  {THEMES.map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => { setTheme(t.id); setShowThemeMenu(false); }}
-                      className={`w-full text-left px-4 py-3 text-sm font-medium flex items-center gap-3 hover:bg-[var(--primary-soft)] transition-colors ${theme === t.id ? 'text-[var(--primary)]' : 'text-[var(--text-secondary)]'}`}
-                    >
-                      <div className="w-4 h-4 rounded-full border border-gray-500/20" style={{ backgroundColor: t.color }}></div>
-                      {t.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Pro Subscription Button */}
-            {!isPro && (
-              <Link 
-                href="/planos"
-                className="p-3 rounded-xl border border-[#f59e0b] bg-[#f59e0b]/10 hover:bg-[#f59e0b] text-[#f59e0b] hover:text-black transition-all font-bold flex items-center gap-2 group"
-              >
+          </div>
                 <span>⭐</span>
                 <span className="hidden md:inline">Seja Premium</span>
               </Link>
