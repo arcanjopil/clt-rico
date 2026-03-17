@@ -212,6 +212,8 @@ export default function FalidaoApp() {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   // --- FUNCTIONS ---
+  
+  // Fetch asset price helper with improved error handling
 
   const fetchMarketRates = useCallback(async () => {
     if (typeof window === 'undefined') return;
