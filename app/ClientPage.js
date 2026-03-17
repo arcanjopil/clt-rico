@@ -185,7 +185,7 @@ export default function FalidaoApp() {
   const [portfolio, setPortfolio] = useState([]);
   const [currency, setCurrency] = useState('BRL');
   const [exchangeRate, setExchangeRate] = useState(5.00); // Mock exchange rate USD -> BRL
-  const [newAsset, setNewAsset] = useState({ name: "", type: "Ação BR", percentage: "", quantity: "", currentPrice: "" });
+  const [newAsset, setNewAsset] = useState({ name: "", type: "Ação BR", percentage: "", quantity: "", currentPrice: "", logoUrl: "" });
 
   // 5. Simulation State
   const [simYears, setSimYears] = useState(10);
@@ -205,6 +205,7 @@ export default function FalidaoApp() {
   const [btcRate, setBtcRate] = useState(0);
   const [usdRate, setUsdRate] = useState(0);
   const [isSearchingAsset, setIsSearchingAsset] = useState(false);
+  const [assetSearchError, setAssetSearchError] = useState('');
 
   // 10. Subscription State
   const [isPro, setIsPro] = useState(false);
@@ -231,6 +232,7 @@ export default function FalidaoApp() {
   const fetchAssetPrice = useCallback(async (ticker) => {
     if (!ticker) return;
     setIsSearchingAsset(true);
+    setAssetSearchError('');
     
     // Normalize ticker
     const cleanTicker = ticker.trim().toUpperCase();
@@ -278,19 +280,29 @@ export default function FalidaoApp() {
                     price = price / usdRate;
                 }
                 
+                let inferredType = null;
+                if (cleanTicker.endsWith('11')) inferredType = 'FII';
+                else if (cleanTicker.endsWith('3') || cleanTicker.endsWith('4')) inferredType = 'Ação BR';
+                else if (cleanTicker.endsWith('34')) inferredType = 'BDR';
+
                 setNewAsset(prev => ({
                     ...prev,
                     name: result.symbol,
                     currentPrice: price,
-                    // Try to infer type
-                    type: result.symbol.endsWith('11') ? (prev.type === 'Ação BR' ? 'FII' : prev.type) : prev.type
+                    logoUrl: result.logourl,
+                    type: inferredType || prev.type
                 }));
                 setIsSearchingAsset(false);
                 return;
             }
         }
+        
+        // If nothing found
+        setAssetSearchError('Ativo não encontrado');
+        
     } catch (e) {
         console.error("Error fetching asset price:", e);
+        setAssetSearchError('Erro ao buscar ativo');
     } finally {
         setIsSearchingAsset(false);
     }
@@ -1141,7 +1153,7 @@ export default function FalidaoApp() {
       quantity: parseFloat(newAsset.quantity) || 0,
       currentPrice: parseFloat(newAsset.currentPrice) || 0
     }]);
-    setNewAsset({ name: "", type: "Ação BR", percentage: "", quantity: "", currentPrice: "" });
+    setNewAsset({ name: "", type: "Ação BR", percentage: "", quantity: "", currentPrice: "", logoUrl: "" });
   };
 
   const handleDeleteAsset = (id) => {
@@ -2714,6 +2726,11 @@ export default function FalidaoApp() {
                                 <Loader2 className="animate-spin text-[var(--primary)]" size={14} />
                             </div>
                         )}
+                        {assetSearchError && (
+                            <div className="absolute left-0 -bottom-6 text-xs text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
+                                {assetSearchError}
+                            </div>
+                        )}
                       </div>
                       <select
                         value={newAsset.type}
@@ -2782,7 +2799,12 @@ export default function FalidaoApp() {
                         <tbody className="divide-y divide-[var(--border-color)]">
                           {portfolio.map(asset => (
                             <tr key={asset.id} className="group hover:bg-[var(--bg-input)] transition-colors">
-                              <td className="px-4 py-3 font-bold text-[var(--text-primary)]">{asset.name}</td>
+                              <td className="px-4 py-3 font-bold text-[var(--text-primary)] flex items-center gap-2">
+                                {asset.logoUrl && (
+                                    <img src={asset.logoUrl} alt={asset.name} className="w-6 h-6 rounded-full object-cover bg-white" onError={(e) => e.target.style.display = 'none'} />
+                                )}
+                                {asset.name}
+                              </td>
                               <td className="px-4 py-3">
                                 <span 
                                   className="text-xs px-2 py-1 rounded text-white"
