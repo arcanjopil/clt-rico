@@ -372,6 +372,45 @@ export default function FalidaoApp() {
 
         setIsDataLoaded(true);
       } else {
+        // First access: Seed with default portfolio
+        const defaultPortfolio = [
+            { id: 1, name: 'IVVB11', type: 'ETF USA', quantity: 0, currentPrice: 364.95, percentage: 20, logoUrl: 'https://brapi.dev/favicon.ico' },
+            { id: 2, name: 'XPLM11', type: 'FII', quantity: 1, currentPrice: 109.90, percentage: 10.14, logoUrl: 'https://s3-symbol-logo.tradingview.com/xp-logistica--600.png' },
+            { id: 3, name: 'XPLG11', type: 'FII', quantity: 1, currentPrice: 101.67, percentage: 9.38, logoUrl: 'https://s3-symbol-logo.tradingview.com/xp-logistica--600.png' },
+            { id: 4, name: 'IPCA+2045', type: 'Renda Fixa', quantity: 58.26, currentPrice: 1.00, percentage: 5.38, logoUrl: '' },
+            { id: 5, name: 'WEGE3', type: 'Ação BR', quantity: 1, currentPrice: 45.97, percentage: 4.24, logoUrl: 'https://s3-symbol-logo.tradingview.com/weg--600.png' },
+            { id: 6, name: 'NASD11', type: 'ETF USA', quantity: 0, currentPrice: 17.98, percentage: 8.89, logoUrl: '' },
+            { id: 7, name: 'ITUB4', type: 'Ação BR', quantity: 1, currentPrice: 34.20, percentage: 3.97, logoUrl: 'https://s3-symbol-logo.tradingview.com/itau-unibanco--600.png' },
+            { id: 8, name: 'SCHD', type: 'ETF USA', quantity: 0, currentPrice: 150.84, percentage: 8.89, logoUrl: '' },
+            { id: 9, name: 'TAEE11', type: 'Ação BR', quantity: 1, currentPrice: 42.63, percentage: 3.93, logoUrl: 'https://s3-symbol-logo.tradingview.com/taesa--600.png' },
+            { id: 10, name: 'VIVT3', type: 'Ação BR', quantity: 1, currentPrice: 40.59, percentage: 3.75, logoUrl: 'https://s3-symbol-logo.tradingview.com/telefonica-brasil--600.png' },
+            { id: 11, name: 'RZAG11', type: 'FII', quantity: 3, currentPrice: 9.15, percentage: 2.53, logoUrl: '' },
+            { id: 12, name: 'IJR', type: 'ETF USA', quantity: 0, currentPrice: 643.40, percentage: 2.22, logoUrl: '' },
+            { id: 13, name: 'BITCOIN', type: 'Cripto', quantity: 0.000000, currentPrice: 350000, percentage: 4.17, logoUrl: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png' },
+            { id: 14, name: 'ETHEREUM', type: 'Cripto', quantity: 0.000000, currentPrice: 18000, percentage: 2.78, logoUrl: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png' },
+            { id: 15, name: 'VALE3', type: 'Ação BR', quantity: 0, currentPrice: 75.40, percentage: 1.79, logoUrl: 'https://s3-symbol-logo.tradingview.com/vale--600.png' },
+            { id: 16, name: 'SMAL11', type: 'ETF Brasil', quantity: 0, currentPrice: 115.40, percentage: 1.43, logoUrl: '' },
+            { id: 17, name: 'SOLANA', type: 'Cripto', quantity: 0, currentPrice: 800, percentage: 0.70, logoUrl: 'https://assets.coingecko.com/coins/images/4128/large/solana.png' },
+            { id: 18, name: 'USDC', type: 'Cripto', quantity: 0, currentPrice: 5.00, percentage: 0.35, logoUrl: 'https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png' },
+            { id: 19, name: 'BBSE3', type: 'Ação BR', quantity: 1, currentPrice: 34.88, percentage: 3.32, logoUrl: 'https://s3-symbol-logo.tradingview.com/bb-seguridade--600.png' },
+            { id: 20, name: 'HGCR11', type: 'FII', quantity: 1, currentPrice: 105.18, percentage: 8.88, logoUrl: '' },
+            { id: 21, name: 'KNCR11', type: 'FII', quantity: 1, currentPrice: 105.19, percentage: 9.71, logoUrl: '' },
+            { id: 22, name: 'HGRU11', type: 'FII', quantity: 1, currentPrice: 129.39, percentage: 11.94, logoUrl: '' },
+            { id: 23, name: 'HGLG11', type: 'FII', quantity: 1, currentPrice: 156.51, percentage: 14.44, logoUrl: '' },
+            { id: 24, name: 'TRXF11', type: 'FII', quantity: 1, currentPrice: 109.90, percentage: 8.48, logoUrl: '' }
+        ];
+
+        setPortfolio(defaultPortfolio);
+        setSalary(0);
+        setExpenses([]);
+        setFixedDebts([]);
+        setClassAllocations({
+            "ETF USA": 20, "Ação USA": 0, "REITs": 0,
+            "ETF Brasil": 5, "Ação BR": 20, "FII": 40,
+            "Renda Fixa": 5, "Tesouro Direto": 0, "CDB/LCI/LCA": 0, "Debêntures": 0,
+            "Fundos de Inv.": 0, "Previdência": 0,
+            "Cripto": 10, "Ouro/Prata": 0, "Crowdfunding": 0, "Reserva Valor": 0
+        });
         setIsDataLoaded(true);
       }
     } catch (e) {
