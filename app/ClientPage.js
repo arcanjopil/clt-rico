@@ -1411,10 +1411,7 @@ export default function FalidaoApp() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] p-4 md:p-8 font-sans transition-colors duration-300 relative">
-      {/* DEBUG BANNER - REMOVE LATER */}
-      <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-center font-bold z-[9999] p-4 animate-pulse shadow-lg text-xl border-b-4 border-yellow-400">
-        🚨 VERSÃO v6.0 - CACHE BUSTER FORCE UPDATE 🚨
-      </div>
+      {/* Banners Removidos */}
 
       {/* Virtual Card Modal */}
       {showCardModal && (
