@@ -1020,14 +1020,24 @@ export default function FalidaoApp() {
 
   // Handlers
   const handleSubscribe = async (planType) => {
-    if (!user) return;
+    if (!user) {
+        alert("Você precisa estar logado para assinar!");
+        return;
+    }
     
-    // Plan Type: 'mensal', 'anual', 'vitalicio'
     try {
+        // Pega o token da sessão atual do Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.access_token) {
+            alert("Sessão expirada. Por favor, faça login novamente.");
+            return;
+        }
+
         const res = await fetch('/api/checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
             },
             body: JSON.stringify({
                 plan: planType
