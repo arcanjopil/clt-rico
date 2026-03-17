@@ -59,5 +59,4 @@
      console.error('Checkout error:', error); 
      return NextResponse.json({ error: 'Erro interno' }, { status: 500 }); 
    } 
- } 
- ENDOFFILE
+ 
