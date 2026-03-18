@@ -2005,7 +2005,7 @@ export default function FalidaoApp() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)]">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-bold text-[var(--text-primary)]">Gastos por Categoria</h3>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">Gastos por Categoria (Gráfico)</h3>
                     <div className="flex gap-2">
                          <button onClick={() => setExpenseChartType('pie')} className={`p-1.5 rounded-lg border transition-all ${expenseChartType === 'pie' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><PieChartIcon size={16} /></button>
                          <button onClick={() => setExpenseChartType('bar')} className={`p-1.5 rounded-lg border transition-all ${expenseChartType === 'bar' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><BarChart3 size={16} /></button>
