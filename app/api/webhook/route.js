@@ -28,8 +28,15 @@ export async function POST(req) {
   // Handle the event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const userId = session.metadata.userId;
-    const plan = session.metadata.plan;
+    
+    // In one-time payments, userId might come from client_reference_id instead of metadata
+    const userId = session.client_reference_id || session.metadata?.userId;
+    const plan = session.metadata?.plan || 'vitalicio'; // Fallback if not set
+
+    if (!userId) {
+        console.error('Webhook error: No user ID found in session metadata or client_reference_id');
+        return NextResponse.json({ error: 'No user ID found' }, { status: 400 });
+    }
 
     console.log(`Processing subscription for user ${userId} plan ${plan}`);
 
@@ -42,7 +49,7 @@ export async function POST(req) {
         status: 'active',
         plan: plan,
         stripe_customer_id: session.customer,
-        stripe_subscription_id: session.subscription,
+        stripe_subscription_id: session.subscription || 'one-time', // vitalicio might not have subscription id
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' }); // Assuming user_id is unique in subscriptions table or PK
 
