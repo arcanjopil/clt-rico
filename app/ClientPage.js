@@ -9,8 +9,7 @@ import {
 import { 
   Wallet, TrendingDown, TrendingUp, DollarSign, Trash2, Edit2, Plus, 
   LayoutDashboard, List, Receipt, AlertCircle, Target, BookOpen, Briefcase, Activity, CheckCircle2, AlertTriangle, Calculator, Sparkles, Percent, Palette, Crown, ShoppingCart, Film, Utensils, ShoppingBag, CreditCard, Tv, Youtube, Music, Car, Coffee, Smartphone, Home, Heart, Zap, Coins, ShieldCheck, Calendar, LogOut, User, Mail, Lock, Loader2,
-  Moon, Sun, CloudRain, Trees,
-  PieChart as PieChartIcon, BarChart3
+  Moon, Sun, CloudRain, Trees, PieChart as PieChartIcon, BarChart3
 } from "lucide-react";
 
 // Initial mock data
