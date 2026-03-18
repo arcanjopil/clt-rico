@@ -2002,7 +2002,7 @@ export default function FalidaoApp() {
               </div>
 
               {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
                 <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)]">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold text-[var(--text-primary)]">Gastos por Categoria</h3>
