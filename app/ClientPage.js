@@ -1701,10 +1701,10 @@ export default function FalidaoApp() {
             </button>
           </div>
 
-          {/* User Info & Actions (Hidden on tiny screens if needed, but lets keep it accessible) */}
-          <div className="hidden lg:flex items-center gap-4">
+          {/* User Info & Actions - Fixed visibility on mobile */}
+          <div className="flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto mt-4 lg:mt-0">
             {/* Saving Indicator */}
-            <div className="hidden xl:flex items-center gap-2 mr-2">
+            <div className="hidden lg:flex items-center gap-2 mr-2">
                 {savingStatus === 'saving' && (
                     <span className="flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] animate-pulse">
                         <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
@@ -1726,7 +1726,7 @@ export default function FalidaoApp() {
             </div>
 
             {/* Salary Input */}
-            <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group">
+            <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group w-full lg:w-auto justify-center">
               <span className="text-[var(--text-secondary)] text-sm font-medium pl-2">Salário:</span>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">R$</span>
@@ -1735,10 +1735,10 @@ export default function FalidaoApp() {
                   value={salary || ''} 
                   placeholder="0,00"
                   onChange={(e) => setSalary(Number(e.target.value))}
-                  className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-28 pl-8 py-1 focus:ring-0 placeholder-gray-500"
+                  className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-32 pl-8 py-1 focus:ring-0 placeholder-gray-500"
                 />
               </div>
-              <Edit2 size={14} className="text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity mr-2" />
+              <Edit2 size={14} className="text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity mr-2 hidden lg:block" />
             </div>
           </div>
         </header>
