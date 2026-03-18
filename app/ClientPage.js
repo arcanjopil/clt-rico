@@ -1710,9 +1710,9 @@ export default function FalidaoApp() {
         </div>
 
         {/* User Info & Actions - Always visible, right below welcome text on mobile */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)] shadow-sm w-full overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)] shadow-sm w-full">
           {/* Salary Input */}
-          <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group w-full justify-between sm:w-auto sm:justify-start">
+          <div className="flex items-center justify-between sm:justify-start gap-4 bg-[var(--bg-input)] p-3 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group w-full sm:w-auto">
             <span className="text-[var(--text-secondary)] text-sm font-medium pl-2 whitespace-nowrap">Salário:</span>
             <div className="relative flex-1 sm:flex-none">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">R$</span>
@@ -1721,14 +1721,14 @@ export default function FalidaoApp() {
                 value={salary || ''} 
                 placeholder="0,00"
                 onChange={(e) => setSalary(Number(e.target.value))}
-                className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-full sm:w-32 pl-8 py-1 focus:ring-0 placeholder-gray-500"
+                className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-full sm:w-32 pl-8 py-1 focus:ring-0 placeholder-gray-500 min-w-[100px]"
               />
             </div>
-            <Edit2 size={14} className="text-[var(--text-secondary)] opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity mr-2" />
+            <Edit2 size={16} className="text-[var(--text-secondary)] opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity mr-2" />
           </div>
 
           {/* Saving Indicator */}
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
               {savingStatus === 'saving' && (
                   <span className="flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] animate-pulse">
                       <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
