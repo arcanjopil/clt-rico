@@ -1215,6 +1215,12 @@ export default function FalidaoApp() {
     setPortfolio(portfolio.filter(asset => asset.id !== id));
   };
 
+  const handleUpdateAssetPercentage = (id, newPercentage) => {
+    setPortfolio(portfolio.map(asset => 
+      asset.id === id ? { ...asset, percentage: Number(newPercentage) } : asset
+    ));
+  };
+
   const handlePresetClick = (preset) => {
     setNewExpense({
       ...newExpense,
@@ -2854,7 +2860,8 @@ export default function FalidaoApp() {
                             <th className="px-4 py-3 text-right">Qtd.</th>
                             <th className="px-4 py-3 text-right">Preço Atual</th>
                             <th className="px-4 py-3 text-right">Total Investido</th>
-                            <th className="px-4 py-3 text-right">Peso na Classe</th>
+                            <th className="px-4 py-3 text-right" title="Peso atual do ativo dentro de sua classe">Atual na Classe</th>
+                            <th className="px-4 py-3 text-right" title="Qual porcentagem da classe deve ser deste ativo?">Objetivo na Classe</th>
                             <th className="px-4 py-3 text-right"></th>
                           </tr>
                         </thead>
@@ -2888,6 +2895,17 @@ export default function FalidaoApp() {
                                 {assetsByClass[asset.type] && assetsByClass[asset.type].totalAmount > 0 ? (
                                     ((asset.quantity * asset.currentPrice) / assetsByClass[asset.type].totalAmount * 100).toFixed(1) + '%'
                                 ) : '-'}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                    <input 
+                                        type="number" 
+                                        value={asset.percentage || ''} 
+                                        onChange={(e) => handleUpdateAssetPercentage(asset.id, e.target.value)}
+                                        className="bg-[var(--bg-input)] border border-[var(--border-color)] rounded px-2 py-1 text-sm text-right w-16 focus:border-[var(--primary)] outline-none text-[var(--text-primary)]"
+                                    />
+                                    <span className="text-[var(--text-secondary)] text-sm">%</span>
+                                </div>
                               </td>
                               <td className="px-4 py-3 text-right">
                                 <button 
