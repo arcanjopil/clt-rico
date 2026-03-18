@@ -277,10 +277,9 @@ export default function FalidaoApp() {
                 
                 // Currency Conversion Logic
                 // Asset is BRL. 
-                // If user selected USD, convert BRL -> USD
-                if (currency === 'USD' && usdRate > 0) {
-                    price = price / usdRate;
-                }
+                // If user selected USD, we DON'T convert it here anymore during fetch.
+                // We let getDisplayPrice handle the display conversion everywhere.
+                // We always save the BRL base price to the database.
                 
                 let inferredType = null;
                 if (cleanTicker.endsWith('11')) inferredType = 'FII';
@@ -1246,7 +1245,8 @@ export default function FalidaoApp() {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   }, [currency]);
 
-  const getDisplayPrice = useCallback((brlPrice) => {
+  const getDisplayPrice = useCallback((brlPrice, isCrypto = false) => {
+      if (!brlPrice) return 0;
       if (currency === 'BRL') return brlPrice;
       if (currency === 'USD' && usdRate > 0) return brlPrice / usdRate;
       return brlPrice;
@@ -2501,7 +2501,7 @@ export default function FalidaoApp() {
                         <div className="w-px bg-[var(--border-color)]"></div>
                         <div className="flex items-center gap-1.5">
                             <span className="text-[var(--text-secondary)]">₿ BTC</span>
-                            <span className="text-[var(--warning)]">{btcRate > 0 ? formatCurrency(btcRate, 'BRL') : '...'}</span>
+                            <span className="text-[var(--warning)]">{btcRate > 0 ? formatCurrency(getDisplayPrice(btcRate, true)) : '...'}</span>
                         </div>
                     </div>
                 </div>
@@ -2579,7 +2579,7 @@ export default function FalidaoApp() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-xs text-[var(--text-secondary)]">Valor</p>
-                                            <p className="font-bold text-[var(--text-primary)]">{formatCurrency(item.amount)}</p>
+                                            <p className="font-bold text-[var(--text-primary)]">{formatCurrency(getDisplayPrice(item.amount))}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -2665,7 +2665,7 @@ export default function FalidaoApp() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-[var(--text-secondary)]">Aporte Mensal</span>
-                        <span className="text-[var(--primary-light)] font-bold">{formatCurrency(simMonthly)}</span>
+                        <span className="text-[var(--primary-light)] font-bold">{formatCurrency(getDisplayPrice(simMonthly))}</span>
                       </div>
                       <input 
                         type="range" 
@@ -2780,13 +2780,13 @@ export default function FalidaoApp() {
                         <div className="bg-[var(--bg-input)] p-1 rounded-lg flex border border-[var(--border-color)]">
                             <button
                                 onClick={() => setCurrency('BRL')}
-                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${currency === 'BRL' ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${currency === 'BRL' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                             >
                                 R$ BRL
                             </button>
                             <button
                                 onClick={() => setCurrency('USD')}
-                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${currency === 'USD' ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${currency === 'USD' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                             >
                                 $ USD
                             </button>
