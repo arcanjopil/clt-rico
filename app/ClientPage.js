@@ -1712,19 +1712,19 @@ export default function FalidaoApp() {
         {/* User Info & Actions - Always visible, right below welcome text on mobile */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)] shadow-sm w-full">
           {/* Salary Input */}
-          <div className="flex items-center justify-between sm:justify-start gap-4 bg-[var(--bg-input)] p-3 rounded-xl border border-[var(--primary)] transition-colors cursor-text group w-full sm:w-auto shadow-inner">
+          <div className="flex items-center justify-between sm:justify-start gap-4 bg-[var(--bg-input)] p-4 rounded-xl border border-[var(--primary)] transition-colors cursor-text group w-full sm:w-auto shadow-inner">
             <span className="text-[var(--text-secondary)] text-sm font-bold pl-2 whitespace-nowrap">Seu Salário:</span>
             <div className="relative flex-1 sm:flex-none">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] font-bold">R$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] font-bold text-lg">R$</span>
               <input 
                 type="number" 
                 value={salary || ''} 
                 placeholder="0,00"
                 onChange={(e) => setSalary(Number(e.target.value))}
-                className="bg-transparent border-none outline-none text-[var(--text-primary)] font-black text-lg w-full sm:w-40 pl-9 py-2 focus:ring-0 placeholder-gray-500 min-w-[120px]"
+                className="bg-transparent border-none outline-none text-[var(--text-primary)] font-black text-xl w-full sm:w-40 pl-10 py-2 focus:ring-0 placeholder-gray-500 min-w-[120px]"
               />
             </div>
-            <Edit2 size={18} className="text-[var(--primary)] opacity-100 sm:opacity-50 group-hover:opacity-100 transition-opacity mr-2" />
+            <Edit2 size={20} className="text-[var(--primary)] opacity-100 sm:opacity-50 group-hover:opacity-100 transition-opacity mr-2" />
           </div>
 
           {/* Saving Indicator */}
