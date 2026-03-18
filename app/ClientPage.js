@@ -2059,7 +2059,7 @@ export default function FalidaoApp() {
 
                 <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)]">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-bold text-[var(--text-primary)]">Sua Alocação Atual vs Meta</h3>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">Alocação Atual vs Meta</h3>
                     <div className="flex gap-2">
                          <button onClick={() => setAllocChartType('pie')} className={`p-1.5 rounded-lg border transition-all ${allocChartType === 'pie' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><PieChartIcon size={16} /></button>
                          <button onClick={() => setAllocChartType('bar')} className={`p-1.5 rounded-lg border transition-all ${allocChartType === 'bar' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><BarChart3 size={16} /></button>
