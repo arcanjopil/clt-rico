@@ -196,6 +196,8 @@ export default function FalidaoApp() {
   const [manualContribution, setManualContribution] = useState("");
   const [rebalanceResult, setRebalanceResult] = useState(null);
   const [selectedClassesForRebalance, setSelectedClassesForRebalance] = useState(ASSET_CLASSES);
+  const [expenseChartType, setExpenseChartType] = useState('pie');
+  const [allocChartType, setAllocChartType] = useState('pie');
 
   // 7. XP & Missions State
   const [xp, setXp] = useState(0);
@@ -2002,54 +2004,109 @@ export default function FalidaoApp() {
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)]">
-                  <h3 className="text-lg font-bold mb-6 text-[var(--text-primary)]">Gastos por Categoria (Pizza)</h3>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">Gastos por Categoria</h3>
+                    <div className="flex gap-2">
+                         <button onClick={() => setExpenseChartType('pie')} className={`p-1.5 rounded-lg border transition-all ${expenseChartType === 'pie' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><PieChartIcon size={16} /></button>
+                         <button onClick={() => setExpenseChartType('bar')} className={`p-1.5 rounded-lg border transition-all ${expenseChartType === 'bar' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><BarChart3 size={16} /></button>
+                    </div>
+                  </div>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={categoryData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {categoryData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="var(--bg-card)" />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }}
-                          itemStyle={{ color: 'var(--text-primary)' }}
-                          formatter={(value) => formatCurrency(value)}
-                        />
-                        <Legend />
-                      </PieChart>
+                      {expenseChartType === 'pie' ? (
+                          <PieChart>
+                            <Pie
+                              data={categoryData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              {categoryData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="var(--bg-card)" />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                              itemStyle={{ color: 'var(--text-primary)' }}
+                              formatter={(value) => formatCurrency(value)}
+                            />
+                            <Legend />
+                          </PieChart>
+                      ) : (
+                          <BarChart data={categoryData}>
+                            <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$${val}`} />
+                            <Tooltip 
+                              cursor={{fill: 'var(--bg-input)'}}
+                              contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                              itemStyle={{ color: 'var(--text-primary)' }}
+                              labelStyle={{ color: 'var(--text-primary)' }}
+                              formatter={(value) => formatCurrency(value)}
+                            />
+                            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                              {categoryData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                      )}
                     </ResponsiveContainer>
                   </div>
                 </div>
 
                 <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)]">
-                  <h3 className="text-lg font-bold mb-6 text-[var(--text-primary)]">Gastos por Categoria (Barras)</h3>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">Alocação da Carteira</h3>
+                    <div className="flex gap-2">
+                         <button onClick={() => setAllocChartType('pie')} className={`p-1.5 rounded-lg border transition-all ${allocChartType === 'pie' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><PieChartIcon size={16} /></button>
+                         <button onClick={() => setAllocChartType('bar')} className={`p-1.5 rounded-lg border transition-all ${allocChartType === 'bar' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><BarChart3 size={16} /></button>
+                    </div>
+                  </div>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={categoryData}>
-                        <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$${val}`} />
-                        <Tooltip 
-                          cursor={{fill: 'var(--bg-input)'}}
-                          contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }}
-                          itemStyle={{ color: 'var(--text-primary)' }}
-                          labelStyle={{ color: 'var(--text-primary)' }}
-                          formatter={(value) => formatCurrency(value)}
-                        />
-                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                          {categoryData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Bar>
-                      </BarChart>
+                      {allocChartType === 'pie' ? (
+                          <PieChart>
+                            <Pie
+                              data={currentAllocData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              {currentAllocData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={ASSET_CLASS_COLORS[entry.name] || COLORS[index % COLORS.length]} stroke="var(--bg-card)" />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                              itemStyle={{ color: 'var(--text-primary)' }}
+                              formatter={(value) => formatCurrency(value)}
+                            />
+                            <Legend />
+                          </PieChart>
+                      ) : (
+                          <BarChart data={currentAllocData}>
+                            <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$${val}`} />
+                            <Tooltip 
+                              cursor={{fill: 'var(--bg-input)'}}
+                              contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                              itemStyle={{ color: 'var(--text-primary)' }}
+                              labelStyle={{ color: 'var(--text-primary)' }}
+                              formatter={(value) => formatCurrency(value)}
+                            />
+                            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                              {currentAllocData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={ASSET_CLASS_COLORS[entry.name] || COLORS[index % COLORS.length]} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                      )}
                     </ResponsiveContainer>
                   </div>
                 </div>
