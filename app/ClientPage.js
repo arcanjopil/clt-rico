@@ -1605,10 +1605,10 @@ export default function FalidaoApp() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto space-y-8">
-        
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-8 pt-6 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
         {/* Header */}
-        <header className="bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)] shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 sticky top-4 z-40">
+        <header className="bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)] shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 sticky top-4 z-40 mb-8">
           
           {/* Logo & Title */}
           <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
@@ -1620,7 +1620,6 @@ export default function FalidaoApp() {
                 CLT Rico
               </h1>
             </div>
-            {/* Mobile Only: Theme Switcher could go here if needed, but let's keep it right */}
           </div>
           
           {/* Action Buttons */}
@@ -1702,26 +1701,34 @@ export default function FalidaoApp() {
           </div>
         </header>
 
-        {/* User Info & Actions - Always visible, right below header on mobile */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)]">
+        {/* Welcome Text */}
+        <div className="mb-6 px-2">
+          <h2 className="text-3xl md:text-4xl font-black text-[var(--text-primary)] tracking-tight">
+            Olá, {user?.user_metadata?.name?.split(' ')[0] || 'Investidor'}! 👋
+          </h2>
+          <p className="text-[var(--text-secondary)] font-medium mt-1">O seu dinheiro trabalhando por você.</p>
+        </div>
+
+        {/* User Info & Actions - Always visible, right below welcome text on mobile */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)] shadow-sm w-full overflow-hidden">
           {/* Salary Input */}
-          <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group w-full sm:w-auto justify-center sm:justify-start">
-            <span className="text-[var(--text-secondary)] text-sm font-medium pl-2">Salário:</span>
-            <div className="relative">
+          <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group w-full justify-between sm:w-auto sm:justify-start">
+            <span className="text-[var(--text-secondary)] text-sm font-medium pl-2 whitespace-nowrap">Salário:</span>
+            <div className="relative flex-1 sm:flex-none">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">R$</span>
               <input 
                 type="number" 
                 value={salary || ''} 
                 placeholder="0,00"
                 onChange={(e) => setSalary(Number(e.target.value))}
-                className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-32 pl-8 py-1 focus:ring-0 placeholder-gray-500"
+                className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-full sm:w-32 pl-8 py-1 focus:ring-0 placeholder-gray-500"
               />
             </div>
-            <Edit2 size={14} className="text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity mr-2" />
+            <Edit2 size={14} className="text-[var(--text-secondary)] opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity mr-2" />
           </div>
 
           {/* Saving Indicator */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               {savingStatus === 'saving' && (
                   <span className="flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] animate-pulse">
                       <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
@@ -1744,7 +1751,7 @@ export default function FalidaoApp() {
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex flex-wrap gap-2 bg-[var(--bg-card)] p-1 rounded-xl w-fit mx-auto md:mx-0 border border-[var(--border-color)]">
+        <nav className="flex flex-wrap gap-2 bg-[var(--bg-card)] p-1 rounded-xl w-fit mx-auto md:mx-0 border border-[var(--border-color)] mb-8">
           {[
             { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
             { id: "investimentos", label: "Investimentos", icon: TrendingUp },
