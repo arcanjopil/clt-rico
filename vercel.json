@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/dividendos",
+      "schedule": "0 10 5 * *"
+    }
+  ]
+}
