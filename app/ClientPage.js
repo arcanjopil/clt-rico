@@ -3143,7 +3143,7 @@ export default function FalidaoApp() {
       </main>
       
       <div className="text-center text-[10px] text-[var(--text-secondary)] opacity-30 py-8">
-        v6.1 - FIXED
+        v6.2 - FIXED DEPLOY
       </div>
     </div>
   );
