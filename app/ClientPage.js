@@ -652,9 +652,18 @@ export default function FalidaoApp() {
         const totalWeightInClass = assetsInSameClass.reduce((sum, a) => sum + (a.percentage || 0), 0) || 1;
         
         // Global Target Value for this specific asset
-        // Formula: (NewTotal * Class% * AssetRelative%)
+        // Formula: (NewTotal * Class%) * (Asset% / TotalClass%)
         const classTargetValue = (newTotalValue * classAlloc) / 100;
-        const assetTargetValue = classTargetValue * ((asset.percentage || 0) / totalWeightInClass);
+        
+        // If the user hasn't set any percentages in this class, distribute evenly
+        let assetRelativeWeight = 0;
+        if (totalWeightInClass === 1 && assetsInSameClass.every(a => !a.percentage)) {
+            assetRelativeWeight = 1 / assetsInSameClass.length;
+        } else {
+            assetRelativeWeight = (asset.percentage || 0) / totalWeightInClass;
+        }
+        
+        const assetTargetValue = classTargetValue * assetRelativeWeight;
         
         const currentValue = asset.quantity * asset.currentPrice;
         
