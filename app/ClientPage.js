@@ -9,7 +9,7 @@ import {
 import { 
   Wallet, TrendingDown, TrendingUp, DollarSign, Trash2, Edit2, Plus, 
   LayoutDashboard, List, Receipt, AlertCircle, Target, BookOpen, Briefcase, Activity, CheckCircle2, AlertTriangle, Calculator, Sparkles, Percent, Palette, Crown, ShoppingCart, Film, Utensils, ShoppingBag, CreditCard, Tv, Youtube, Music, Car, Coffee, Smartphone, Home, Heart, Zap, Coins, ShieldCheck, Calendar, LogOut, User, Mail, Lock, Loader2,
-  Moon, Sun, CloudRain, Trees, BarChart3, PieChart as PieChartIcon
+  Moon, Sun, CloudRain, Trees, BarChart3, Disc
 } from "lucide-react";
 
 // Initial mock data
@@ -2007,7 +2007,7 @@ export default function FalidaoApp() {
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold text-[var(--text-primary)]">Gastos por Categoria</h3>
                     <div className="flex gap-2">
-                         <button onClick={() => setExpenseChartType('pie')} className={`p-1.5 rounded-lg border transition-all ${expenseChartType === 'pie' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><PieChartIcon size={16} /></button>
+                         <button onClick={() => setExpenseChartType('pie')} className={`p-1.5 rounded-lg border transition-all ${expenseChartType === 'pie' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><Disc size={16} /></button>
                          <button onClick={() => setExpenseChartType('bar')} className={`p-1.5 rounded-lg border transition-all ${expenseChartType === 'bar' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><BarChart3 size={16} /></button>
                     </div>
                   </div>
@@ -2061,7 +2061,7 @@ export default function FalidaoApp() {
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold text-[var(--text-primary)]">Alocação Atual vs Meta (Carteira)</h3>
                     <div className="flex gap-2">
-                         <button onClick={() => setAllocChartType('pie')} className={`p-1.5 rounded-lg border transition-all ${allocChartType === 'pie' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><PieChartIcon size={16} /></button>
+                         <button onClick={() => setAllocChartType('pie')} className={`p-1.5 rounded-lg border transition-all ${allocChartType === 'pie' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><Disc size={16} /></button>
                          <button onClick={() => setAllocChartType('bar')} className={`p-1.5 rounded-lg border transition-all ${allocChartType === 'bar' ? 'bg-[var(--primary-soft)] border-[var(--primary)] text-[var(--primary)]' : 'bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--text-secondary)]'}`}><BarChart3 size={16} /></button>
                     </div>
                   </div>
@@ -3143,7 +3143,7 @@ export default function FalidaoApp() {
       </main>
       
       <div className="text-center text-[10px] text-[var(--text-secondary)] opacity-30 py-8">
-        v6.0 - Charts Updated
+        v6.1 - FIXED
       </div>
     </div>
   );
