@@ -1612,9 +1612,9 @@ export default function FalidaoApp() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 pt-6 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
+      <main className="flex-1 p-4 md:p-8 pt-6 pb-24 md:pb-8 max-w-7xl mx-auto w-full relative">
         {/* Header */}
-        <header className="bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)] shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 sticky top-4 z-40 mb-8">
+        <header className="bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)] shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
           
           {/* Logo & Title */}
           <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
