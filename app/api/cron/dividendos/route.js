@@ -7,8 +7,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend with a dummy key for build time if not present
+const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key_for_build');
 
 // Mock data to simulate AI/Professional Analysis API responses
 const MOCK_MARKET_ANALYSIS = {

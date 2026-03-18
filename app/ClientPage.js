@@ -2909,8 +2909,8 @@ export default function FalidaoApp() {
           )}
         </main>
 
-        {/* Subscription Modal */}
-        {showSubscriptionModal && (
+      {/* Subscription Modal */}
+      {showSubscriptionModal && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
              <div 
                 className="bg-[var(--bg-card)] max-w-4xl w-full rounded-3xl border border-[var(--border-color)] shadow-2xl relative overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300"
@@ -3050,7 +3050,7 @@ export default function FalidaoApp() {
              </div>
           </div>
         )}
-      </div>
+      </main>
       
       <div className="text-center text-[10px] text-[var(--text-secondary)] opacity-30 py-8">
         v5.3 - Final
