@@ -34,3 +34,8 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Versão 6.2 (Current)
+- Fix: Resolução de conflito de importação de ícones (PieChart vs PieChartIcon) que travava o build no Vercel.
+- Feat: Gráficos do Dashboard agora mostram "Gastos" (Esq) e "Alocação da Carteira" (Dir) corretamente.
+- Feat: Botões para alternar entre Pizza e Barras em ambos os gráficos.
