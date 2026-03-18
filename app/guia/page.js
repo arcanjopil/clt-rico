@@ -132,7 +132,6 @@ export default function GuiaPage() {
     <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4 sm:p-6 font-sans">
       <div className="w-full max-w-2xl bg-[#12121a] border border-[#2a2a35] rounded-2xl shadow-2xl overflow-hidden relative flex flex-col min-h-[500px]">
         
-        {/* Header E-book */}
         <div className="bg-[#1a1a24] border-b border-[#2a2a35] p-4 flex items-center justify-between">
           <div className="text-sm font-bold text-[#6366f1] tracking-widest uppercase">
             E-book Oficial
@@ -142,7 +141,6 @@ export default function GuiaPage() {
           </div>
         </div>
 
-        {/* Content Area */}
         <div className="flex-1 p-8 sm:p-12 flex flex-col items-center justify-center text-center animate-in fade-in duration-500 key={currentPage}">
           {pages[currentPage].icon}
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6">
@@ -153,7 +151,6 @@ export default function GuiaPage() {
           </div>
         </div>
 
-        {/* Navigation Footer */}
         <div className="bg-[#1a1a24] border-t border-[#2a2a35] p-4 flex items-center justify-between mt-auto">
           <button 
             onClick={prevPage}
@@ -163,7 +160,6 @@ export default function GuiaPage() {
             <ChevronLeft size={20} /> Anterior
           </button>
           
-          {/* Progress dots */}
           <div className="flex gap-2">
             {pages.map((_, idx) => (
               <div 
@@ -181,7 +177,7 @@ export default function GuiaPage() {
               Próximo <ChevronRight size={20} />
             </button>
           ) : (
-            <div className="px-4 py-2 w-[100px]"></div> /* Placeholder to keep alignment */
+            <div className="px-4 py-2 w-[100px]"></div>
           )}
         </div>
       </div>

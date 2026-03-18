@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from '@/lib/supabaseClient';
 
 import { 
@@ -136,15 +137,33 @@ export default function FalidaoApp() {
     }
   };
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   // --- STATE DEFINITIONS (Must be at top) ---
   
   // 1. Auth State
   const [user, setUser] = useState(null);
   const [authView, setAuthView] = useState('login'); // 'login' or 'register'
+  const [postAuthRedirect, setPostAuthRedirect] = useState(null);
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '', gender: 'male' });
   const [authError, setAuthError] = useState('');
   const [authSuccess, setAuthSuccess] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false); // Loading state for auth actions
+
+  useEffect(() => {
+    const next = searchParams.get('next');
+    const auth = searchParams.get('auth');
+
+    if (next) setPostAuthRedirect(next);
+    if (auth === 'login' || auth === 'register' || auth === 'forgot') setAuthView(auth);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!user || !postAuthRedirect) return;
+    router.push(postAuthRedirect);
+    setPostAuthRedirect(null);
+  }, [postAuthRedirect, router, user]);
 
   // 2. General App State
   // Initialize with safe defaults

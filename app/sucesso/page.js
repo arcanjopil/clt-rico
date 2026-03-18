@@ -11,7 +11,10 @@ export default function SucessoPage() {
   const [countdown, setCountdown] = useState(6);
 
   useEffect(() => {
-    // Confetti animation
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'Purchase');
+    }
+
     const duration = 3 * 1000;
     const animationEnd = Date.now() + duration;
     const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
@@ -30,7 +33,6 @@ export default function SucessoPage() {
       confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
     }, 250);
 
-    // Countdown and redirect
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {

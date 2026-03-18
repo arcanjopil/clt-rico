@@ -1,21 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { CheckCircle2, Loader2, Wallet, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 export default function PlanosPage() {
   const [loading, setLoading] = useState(null); // 'mensal' or 'anual'
+  const searchParams = useSearchParams();
+  const didAutoCheckout = useRef(false);
 
-  const handleSubscribe = async (plan) => {
+  const handleSubscribe = useCallback(async (plan) => {
     setLoading(plan);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('Você precisa estar logado para assinar.');
-        setLoading(null);
+        const next = `/planos?plan=${encodeURIComponent(plan)}`;
+        window.location.href = `/?auth=login&next=${encodeURIComponent(next)}`;
         return;
+      }
+
+      if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+        window.fbq('track', 'InitiateCheckout', { content_name: plan });
       }
 
       const priceId = plan === 'mensal' 
@@ -52,7 +59,28 @@ export default function PlanosPage() {
       alert(`Erro de conexão: ${error.message}`);
       setLoading(null);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'ViewContent', { content_name: 'Planos' });
+    }
+  }, []);
+
+  useEffect(() => {
+    const plan = searchParams.get('plan');
+    if (!plan || didAutoCheckout.current) return;
+
+    if (plan !== 'mensal' && plan !== 'anual') return;
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      didAutoCheckout.current = true;
+      handleSubscribe(plan);
+    })();
+  }, [handleSubscribe, searchParams]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white font-sans p-6">
@@ -161,5 +189,3 @@ export default function PlanosPage() {
     </div>
   );
 }
-/* force update */
-/* force update */
