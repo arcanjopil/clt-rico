@@ -1238,13 +1238,19 @@ export default function FalidaoApp() {
     });
   };
 
-  const formatCurrency = (value, curr = currency) => {
+  const formatCurrency = useCallback((value, curr = currency) => {
     const val = value || 0;
     if (curr === 'USD') {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
     }
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-  };
+  }, [currency]);
+
+  const getDisplayPrice = useCallback((brlPrice) => {
+      if (currency === 'BRL') return brlPrice;
+      if (currency === 'USD' && usdRate > 0) return brlPrice / usdRate;
+      return brlPrice;
+  }, [currency, usdRate]);
 
   const convertValue = (value) => {
     if (currency === 'BRL') return value;
@@ -1557,7 +1563,7 @@ export default function FalidaoApp() {
                             <div>
                                 <div className="text-[10px] text-white/60 uppercase mb-1">Patrimônio Total</div>
                                 <div className="text-xl font-mono font-bold text-white tracking-tight">
-                                    {formatCurrency(totalPatrimony)}
+                                    {formatCurrency(getDisplayPrice(totalPatrimony))}
                                 </div>
                             </div>
                             
@@ -1833,7 +1839,7 @@ export default function FalidaoApp() {
                     <div className="grid grid-cols-2 gap-4 bg-[var(--bg-input)]/50 p-3 rounded-xl border border-[var(--border-color)]/50">
                        <div className="text-left">
                           <p className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] mb-0.5">Patrimônio Atual</p>
-                          <p className="font-bold text-[var(--text-primary)]">{formatCurrency(totalPatrimony)}</p>
+                          <p className="font-bold text-[var(--text-primary)]">{formatCurrency(getDisplayPrice(totalPatrimony))}</p>
                        </div>
                        <div className="text-right">
                           <div className="flex items-center justify-end gap-2 mb-0.5">
@@ -1861,7 +1867,7 @@ export default function FalidaoApp() {
                             </div>
                           ) : (
                             <p className="font-bold text-[var(--text-primary)] opacity-70 cursor-pointer" onClick={() => setIsEditingGoal(true)}>
-                              {formatCurrency(userInvestmentGoal)}
+                              {formatCurrency(getDisplayPrice(userInvestmentGoal))}
                             </p>
                           )}
                        </div>
@@ -1891,7 +1897,7 @@ export default function FalidaoApp() {
                     <DollarSign size={64} className="text-[var(--success)]" />
                   </div>
                   <p className="text-[var(--text-secondary)] text-sm mb-1">Entradas</p>
-                  <h3 className="text-2xl font-bold text-[var(--success)]">{formatCurrency(salary)}</h3>
+                  <h3 className="text-2xl font-bold text-[var(--success)]">{formatCurrency(getDisplayPrice(salary))}</h3>
                 </div>
                 
                 <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--warning)] transition-colors">
@@ -1899,7 +1905,7 @@ export default function FalidaoApp() {
                     <Calendar size={64} className="text-[var(--warning)]" />
                   </div>
                   <p className="text-[var(--text-secondary)] text-sm mb-1">Dívidas Fixas</p>
-                  <h3 className="text-2xl font-bold text-[var(--warning)]">{formatCurrency(totalFixedDebts)}</h3>
+                  <h3 className="text-2xl font-bold text-[var(--warning)]">{formatCurrency(getDisplayPrice(totalFixedDebts))}</h3>
                 </div>
 
                 <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--danger)] transition-colors">
@@ -1909,7 +1915,7 @@ export default function FalidaoApp() {
                   <div className="flex justify-between items-start">
                     <div>
                         <p className="text-[var(--text-secondary)] text-sm mb-1">Gastos Variáveis</p>
-                        <h3 className="text-2xl font-bold text-[var(--danger)]">{formatCurrency(totalExpenses)}</h3>
+                        <h3 className="text-2xl font-bold text-[var(--danger)]">{formatCurrency(getDisplayPrice(totalExpenses))}</h3>
                     </div>
                     <button 
                         onClick={handleCloseMonth}
@@ -1926,7 +1932,7 @@ export default function FalidaoApp() {
                     <Target size={64} className="text-[var(--primary)]" />
                   </div>
                   <p className="text-[var(--text-secondary)] text-sm mb-1">Investimentos ({investmentGoalPct}%)</p>
-                  <h3 className="text-2xl font-bold text-[var(--primary)]">{formatCurrency(investmentAmount)}</h3>
+                  <h3 className="text-2xl font-bold text-[var(--primary)]">{formatCurrency(getDisplayPrice(investmentAmount))}</h3>
                 </div>
 
                 <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--info)] transition-colors">
@@ -1935,7 +1941,7 @@ export default function FalidaoApp() {
                   </div>
                   <p className="text-[var(--text-secondary)] text-sm mb-1">Saldo Livre</p>
                   <h3 className={`text-2xl font-bold ${balance >= 0 ? "text-[var(--info)]" : "text-[var(--danger)]"}`}>
-                    {formatCurrency(balance)}
+                    {formatCurrency(getDisplayPrice(balance))}
                   </h3>
                 </div>
               </div>
@@ -2895,10 +2901,10 @@ export default function FalidaoApp() {
                                 {asset.type === 'Cripto' ? asset.quantity : Math.floor(asset.quantity)}
                               </td>
                               <td className="px-4 py-3 text-right text-[var(--text-secondary)]">
-                                {formatCurrency(asset.currentPrice)}
+                                {formatCurrency(getDisplayPrice(asset.currentPrice, asset.type === 'Cripto'))}
                               </td>
                               <td className="px-4 py-3 text-right font-bold text-[var(--text-primary)]">
-                                {formatCurrency(asset.quantity * asset.currentPrice)}
+                                {formatCurrency(getDisplayPrice(asset.quantity * asset.currentPrice, asset.type === 'Cripto'))}
                               </td>
                               <td className="px-4 py-3 text-right text-[var(--text-secondary)]">
                                 {assetsByClass[asset.type] && assetsByClass[asset.type].totalAmount > 0 ? (
