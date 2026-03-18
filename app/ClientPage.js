@@ -1700,48 +1700,48 @@ export default function FalidaoApp() {
                 <span className="hidden sm:inline">Instalar</span>
             </button>
           </div>
-
-          {/* User Info & Actions - Fixed visibility on mobile */}
-          <div className="flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto mt-4 lg:mt-0">
-            {/* Saving Indicator */}
-            <div className="hidden lg:flex items-center gap-2 mr-2">
-                {savingStatus === 'saving' && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] animate-pulse">
-                        <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
-                        Salvando...
-                    </span>
-                )}
-                {savingStatus === 'saved' && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-[var(--success)] animate-in fade-in slide-in-from-bottom-1">
-                        <CheckCircle2 size={12} />
-                        Salvo
-                    </span>
-                )}
-                {savingStatus === 'error' && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-[var(--danger)]">
-                        <AlertTriangle size={12} />
-                        Erro ao salvar
-                    </span>
-                )}
-            </div>
-
-            {/* Salary Input */}
-            <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group w-full lg:w-auto justify-center">
-              <span className="text-[var(--text-secondary)] text-sm font-medium pl-2">Salário:</span>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">R$</span>
-                <input 
-                  type="number" 
-                  value={salary || ''} 
-                  placeholder="0,00"
-                  onChange={(e) => setSalary(Number(e.target.value))}
-                  className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-32 pl-8 py-1 focus:ring-0 placeholder-gray-500"
-                />
-              </div>
-              <Edit2 size={14} className="text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity mr-2 hidden lg:block" />
-            </div>
-          </div>
         </header>
+
+        {/* User Info & Actions - Always visible, right below header on mobile */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-color)]">
+          {/* Salary Input */}
+          <div className="flex items-center gap-4 bg-[var(--bg-input)] p-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--primary)] transition-colors cursor-text group w-full sm:w-auto justify-center sm:justify-start">
+            <span className="text-[var(--text-secondary)] text-sm font-medium pl-2">Salário:</span>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">R$</span>
+              <input 
+                type="number" 
+                value={salary || ''} 
+                placeholder="0,00"
+                onChange={(e) => setSalary(Number(e.target.value))}
+                className="bg-transparent border-none outline-none text-[var(--text-primary)] font-bold w-32 pl-8 py-1 focus:ring-0 placeholder-gray-500"
+              />
+            </div>
+            <Edit2 size={14} className="text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity mr-2" />
+          </div>
+
+          {/* Saving Indicator */}
+          <div className="flex items-center gap-2">
+              {savingStatus === 'saving' && (
+                  <span className="flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] animate-pulse">
+                      <span className="w-2 h-2 rounded-full bg-[var(--warning)]"></span>
+                      Salvando...
+                  </span>
+              )}
+              {savingStatus === 'saved' && (
+                  <span className="flex items-center gap-1 text-xs font-medium text-[var(--success)] animate-in fade-in slide-in-from-bottom-1">
+                      <CheckCircle2 size={12} />
+                      Salvo
+                  </span>
+              )}
+              {savingStatus === 'error' && (
+                  <span className="flex items-center gap-1 text-xs font-medium text-[var(--danger)]">
+                      <AlertTriangle size={12} />
+                      Erro ao salvar
+                  </span>
+              )}
+          </div>
+        </div>
 
         {/* Navigation Tabs */}
         <nav className="flex flex-wrap gap-2 bg-[var(--bg-card)] p-1 rounded-xl w-fit mx-auto md:mx-0 border border-[var(--border-color)]">
