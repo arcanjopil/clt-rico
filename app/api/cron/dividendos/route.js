@@ -114,27 +114,38 @@ export async function GET(req) {
       const email = authUser.user.email;
       const name = authUser.user.user_metadata?.name || 'Investidor';
 
-      // For testing phase: ONLY send to your email
-      if (email !== 'arcanjopil@gmail.com') continue;
+      // Check subscription status
+      const { data: subData } = await supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('user_id', userData.user_id)
+        .maybeSingle();
+
+      const isPremium = subData?.status === 'active' || email === 'arcanjopil@gmail.com';
+
+      // For free users, only show a limited number of assets (e.g., max 2)
+      const assetLimit = isPremium ? userData.carteira.length : 2;
+      const visibleAssets = userData.carteira.slice(0, assetLimit);
+      const hiddenAssetsCount = Math.max(0, userData.carteira.length - assetLimit);
 
       let totalDividendsEstimate = 0;
       let totalPortfolioValue = 0;
       let assetAnalysisHtml = '';
 
-      // Calculate totals and generate professional analysis per asset
+      // Calculate totals based on ALL assets, even if hidden
       for (const asset of userData.carteira) {
         if (!asset.quantity || asset.quantity <= 0) continue;
-
         const value = asset.quantity * (asset.currentPrice || 0);
         totalPortfolioValue += value;
-        
         let mockYield = 0;
         if (asset.type === 'FII') mockYield = 0.008;
         if (asset.type === 'Ação BR') mockYield = 0.005;
-        
-        const estimatedDividend = value * mockYield;
-        totalDividendsEstimate += estimatedDividend;
+        totalDividendsEstimate += value * mockYield;
+      }
 
+      // Generate HTML only for VISIBLE assets
+      for (const asset of visibleAssets) {
+        if (!asset.quantity || asset.quantity <= 0) continue;
         const analysis = getAssetAnalysis(asset.name, asset.type);
 
         assetAnalysisHtml += `
@@ -168,6 +179,22 @@ export async function GET(req) {
             <p style="color: #d4d4d8; font-size: 14px; line-height: 1.5; margin: 0; padding-left: 10px; border-left: 3px solid #a855f7;">
               <strong>Visão do Analista:</strong> ${analysis.comment}
             </p>
+          </div>
+        `;
+      }
+
+      // Add upsell banner for free users if they have hidden assets
+      if (!isPremium && hiddenAssetsCount > 0) {
+        assetAnalysisHtml += `
+          <div style="background: linear-gradient(145deg, #2e1065 0%, #1a0b2e 100%); border: 1px solid #a855f7; border-radius: 12px; padding: 25px; margin-bottom: 20px; text-align: center;">
+            <div style="font-size: 24px; margin-bottom: 10px;">🔒</div>
+            <h3 style="margin: 0 0 10px 0; color: #fff; font-size: 18px;">Você tem mais ${hiddenAssetsCount} ativo(s) não analisados</h3>
+            <p style="color: #d8b4fe; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
+              Este é um relatório parcial. Assine o CLT Rico Premium para desbloquear o Raio-X completo de toda a sua carteira, receber recomendações táticas e acessar o simulador avançado.
+            </p>
+            <a href="https://cltrico.online/planos" style="background-color: #a855f7; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+              Desbloquear Relatório Completo
+            </a>
           </div>
         `;
       }
