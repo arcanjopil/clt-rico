@@ -1044,6 +1044,20 @@ export default function FalidaoApp() {
       .map(key => ({ name: key, value: classAllocations[key] }));
   }, [classAllocations]);
 
+  const currentAllocData = useMemo(() => {
+    const totalsByClass = {};
+
+    (portfolio || []).forEach((asset) => {
+      const assetValue = (asset?.quantity || 0) * (asset?.currentPrice || 0);
+      if (!asset?.type || assetValue <= 0) return;
+      totalsByClass[asset.type] = (totalsByClass[asset.type] || 0) + assetValue;
+    });
+
+    return Object.entries(totalsByClass)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [portfolio]);
+
   // Simulator Data & Weighted Average Rate
   const { weightedAverageRate, weightedAverageYield } = useMemo(() => {
     let totalWeightedReturn = 0;
