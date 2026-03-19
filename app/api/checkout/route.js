@@ -17,6 +17,23 @@ const PLANS = {
   },
 };
 
+function getBaseUrl(req) {
+  const envUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    process.env.NEXT_PUBLIC_URL ||
+    process.env.NEXT_PUBLIC_APP_URL;
+  if (envUrl) return envUrl.replace(/\/$/, '');
+
+  const origin = req.headers.get('origin');
+  if (origin) return origin.replace(/\/$/, '');
+
+  const proto = req.headers.get('x-forwarded-proto') || 'https';
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+  if (host) return `${proto}://${host}`.replace(/\/$/, '');
+
+  return null;
+}
+
 export async function POST(req) {
   try {
     const { plan } = await req.json();
@@ -48,7 +65,13 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Usuario nao encontrado' }, { status: 401 });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_URL;
+    const baseUrl = getBaseUrl(req);
+    if (!baseUrl) {
+      return NextResponse.json(
+        { error: 'URL base nao configurada' },
+        { status: 500 }
+      );
+    }
     
     // Metadata for webhook handling
     const metadata = {
