@@ -12,12 +12,20 @@ export default function OfertaPage() {
           <Link href="/" className="font-bold text-xl">
             CLT Rico
           </Link>
-          <Link
-            href="/planos"
-            className="text-sm text-gray-300 hover:text-white transition-colors"
-          >
-            Ver planos
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/app"
+              className="text-sm text-gray-300 hover:text-white transition-colors"
+            >
+              Entrar
+            </Link>
+            <Link
+              href="/planos"
+              className="text-sm text-gray-300 hover:text-white transition-colors"
+            >
+              Ver planos
+            </Link>
+          </div>
         </header>
 
         <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -44,7 +52,7 @@ export default function OfertaPage() {
                 <ArrowRight size={18} />
               </Link>
               <Link
-                href="/?auth=register&next=%2Fplanos"
+                href="/app?auth=register&next=%2Fplanos"
                 className="inline-flex items-center justify-center px-6 py-4 rounded-xl font-bold bg-[#121218] border border-gray-800 hover:border-gray-700 transition-all"
               >
                 Criar conta
@@ -107,4 +115,3 @@ export default function OfertaPage() {
     </div>
   );
 }
-

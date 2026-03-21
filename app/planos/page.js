@@ -64,7 +64,7 @@ export default function PlanosPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         const next = `/planos?plan=${encodeURIComponent(plan)}`;
-        window.location.href = `/?auth=login&next=${encodeURIComponent(next)}`;
+        window.location.href = `/app?auth=login&next=${encodeURIComponent(next)}`;
         return;
       }
 
@@ -130,7 +130,7 @@ export default function PlanosPage() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <header className="flex items-center justify-between mb-12">
-          <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+          <Link href="/oferta" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
             <ArrowLeft size={20} />
             Voltar
           </Link>

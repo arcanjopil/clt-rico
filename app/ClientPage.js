@@ -231,6 +231,8 @@ export default function FalidaoApp() {
   // 10. Subscription State
   const [isPro, setIsPro] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [isSubscriptionLoaded, setIsSubscriptionLoaded] = useState(false);
+  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
 
   // --- FUNCTIONS ---
   
@@ -376,20 +378,6 @@ export default function FalidaoApp() {
         setUserGender(data.data?.gender || 'male');
         setEmergencyFundPct(data.data?.emergencyFundPct || 5);
         setEmergencyMonths(data.data?.emergencyMonths || 6);
-        
-        // Fetch subscription status
-        const { data: subData } = await supabase
-            .from('subscriptions')
-            .select('status, plan')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-        if (subData && subData.status === 'active') {
-            setIsPro(true);
-        } else {
-            setIsPro(false);
-        }
-
         setIsDataLoaded(true);
       } else {
         // First access
@@ -451,6 +439,36 @@ export default function FalidaoApp() {
       console.error("Exceção no loadData:", e);
     }
   }, [user]);
+
+  const loadSubscription = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    if (!user?.id) return;
+
+    try {
+      if (user?.email === 'arcanjopil@gmail.com') {
+        setIsPro(true);
+        setSubscriptionPlan('owner');
+        setIsSubscriptionLoaded(true);
+        return;
+      }
+
+      const { data: subData } = await supabase
+        .from('subscriptions')
+        .select('status, plan')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const active = subData?.status === 'active';
+      setIsPro(active);
+      setSubscriptionPlan(subData?.plan || null);
+      setIsSubscriptionLoaded(true);
+    } catch (e) {
+      console.error('Erro ao verificar assinatura:', e);
+      setIsPro(false);
+      setSubscriptionPlan(null);
+      setIsSubscriptionLoaded(true);
+    }
+  }, [user?.email, user?.id]);
 
   const saveData = useCallback(async () => {
     if (typeof window === 'undefined') return;
@@ -532,6 +550,9 @@ export default function FalidaoApp() {
         } else {
             setUser(null);
             setIsDataLoaded(false);
+            setIsPro(false);
+            setIsSubscriptionLoaded(false);
+            setSubscriptionPlan(null);
         }
     });
 
@@ -541,12 +562,18 @@ export default function FalidaoApp() {
     };
   }, []);
 
-  // 2. Load Data Effect
   useEffect(() => {
     if (user?.id) {
+      loadSubscription();
+    }
+  }, [loadSubscription, user?.id]);
+
+  // 2. Load Data Effect
+  useEffect(() => {
+    if (user?.id && isSubscriptionLoaded && isPro) {
         loadData();
     }
-  }, [user?.id, loadData]);
+  }, [isPro, isSubscriptionLoaded, loadData, user?.id]);
 
   // 3. Save User Data Effect (Debounced)
   useEffect(() => {
@@ -1496,6 +1523,71 @@ export default function FalidaoApp() {
                 </button>
                 </p>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSubscriptionLoaded) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-app)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-[var(--primary)]" size={48} />
+          <p className="text-[var(--text-secondary)] animate-pulse">Verificando sua assinatura...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isPro) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex items-center justify-center p-6">
+        <div className="w-full max-w-2xl bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-[var(--primary-soft)] rounded-2xl">
+              <Crown className="text-[var(--primary)]" size={26} />
+            </div>
+            <div>
+              <div className="text-2xl font-extrabold">Acesso Premium</div>
+              <div className="text-[var(--text-secondary)] text-sm">Assine para entrar no app</div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            <button
+              onClick={() => (window.location.href = '/planos?plan=mensal')}
+              className="w-full py-4 rounded-2xl font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white transition-all"
+            >
+              Mensal
+            </button>
+            <button
+              onClick={() => (window.location.href = '/planos?plan=anual')}
+              className="w-full py-4 rounded-2xl font-bold bg-[#f59e0b] hover:bg-[#d97706] text-black transition-all"
+            >
+              Anual
+            </button>
+            <button
+              onClick={() => (window.location.href = '/planos?plan=vitalicio')}
+              className="w-full py-4 rounded-2xl font-bold bg-indigo-500 hover:bg-indigo-600 text-white transition-all"
+            >
+              Vitalício
+            </button>
+          </div>
+
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-between">
+            <button
+              onClick={() => (window.location.href = '/oferta')}
+              className="px-4 py-3 rounded-xl bg-[var(--bg-input)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+            >
+              Ver apresentação
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-3 rounded-xl bg-[var(--danger-soft)]/20 border border-[var(--danger)]/40 text-[var(--danger)] hover:opacity-90 transition-all"
+            >
+              Sair
+            </button>
           </div>
         </div>
       </div>

@@ -107,7 +107,7 @@ const pages = [
           Nos vemos no topo! 🚀
         </p>
         <Link 
-          href="/" 
+          href="/app" 
           className="inline-flex items-center justify-center w-full px-8 py-4 bg-gradient-to-r from-[#6366f1] to-[#ec4899] hover:opacity-90 text-white rounded-xl font-bold transition-all hover:scale-105 shadow-lg shadow-indigo-500/25"
         >
           Acessar o App Agora
