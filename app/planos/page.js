@@ -85,7 +85,8 @@ export default function PlanosPage() {
       
       if (!res.ok) {
         console.error('Checkout API Error:', data);
-        alert(`Erro ao iniciar checkout: ${data.error || 'Erro desconhecido'} (Status: ${res.status})`);
+        const details = data?.details ? `\n\nDetalhes: ${data.details}` : '';
+        alert(`Erro ao iniciar checkout: ${data.error || 'Erro desconhecido'} (Status: ${res.status})${details}`);
         setLoading(null);
         return;
       }

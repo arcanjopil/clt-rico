@@ -93,7 +93,18 @@ export async function POST(req) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
+    const stripeCode = error?.code;
+    const stripeType = error?.type;
+    const message = typeof error?.message === 'string' ? error.message : 'Erro interno';
+
+    if (stripeType === 'StripeInvalidRequestError' && stripeCode === 'resource_missing') {
+      return NextResponse.json(
+        { error: 'Price ID invalido no Stripe', details: message },
+        { status: 400 }
+      );
+    }
+
     console.error('Checkout error:', error);
-    return NextResponse.json({ error: 'Erro interno', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno', details: message }, { status: 500 });
   }
 }
