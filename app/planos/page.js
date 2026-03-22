@@ -190,8 +190,8 @@ export default function PlanosPage() {
 
           {/* Plano Vitalício (Destaque) */}
           <div className="order-1 md:col-span-2 lg:col-span-1 lg:order-2 relative rounded-3xl p-[2px] bg-gradient-to-br from-indigo-500/70 via-fuchsia-500/40 to-indigo-500/10 shadow-[0_0_50px_-18px_rgba(99,102,241,0.75)]">
-            <div className="bg-[#0f0f16] rounded-3xl p-8 relative overflow-hidden flex flex-col h-full">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-sm font-extrabold px-4 py-1.5 rounded-full shadow-lg shadow-indigo-500/30 whitespace-nowrap">
+            <div className="bg-[#0f0f16] rounded-3xl p-8 pt-10 relative overflow-visible flex flex-col h-full">
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-sm font-extrabold px-4 py-1.5 rounded-full shadow-lg shadow-indigo-500/30 whitespace-nowrap">
                 Melhor custo-benefício
               </div>
               <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-indigo-500/10 via-transparent to-transparent" />
