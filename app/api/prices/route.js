@@ -28,21 +28,27 @@ function formatStripePrice(price) {
 }
 
 export async function GET() {
-  try {
-    const entries = await Promise.all(
-      Object.entries(PRICE_IDS).map(async ([key, priceId]) => {
-        if (!priceId) return [key, null];
+  const configured = {
+    mensal: PRICE_IDS.mensal || null,
+    anual: PRICE_IDS.anual || null,
+    vitalicio: PRICE_IDS.vitalicio || null,
+  };
+
+  const results = await Promise.all(
+    Object.entries(PRICE_IDS).map(async ([key, priceId]) => {
+      if (!priceId) {
+        return [key, { price: null, error: 'Price ID nao configurado', used_price_id: null }];
+      }
+
+      try {
         const price = await stripe.prices.retrieve(priceId);
-        return [key, formatStripePrice(price)];
-      })
-    );
+        return [key, { price: formatStripePrice(price), error: null, used_price_id: priceId }];
+      } catch (error) {
+        const message = typeof error?.message === 'string' ? error.message : 'Erro ao carregar price';
+        return [key, { price: null, error: message, used_price_id: priceId }];
+      }
+    })
+  );
 
-    return NextResponse.json({ prices: Object.fromEntries(entries) });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Erro ao carregar preços', details: error.message },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({ configured, results: Object.fromEntries(results) });
 }
-
