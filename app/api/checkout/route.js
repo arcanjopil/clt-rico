@@ -84,6 +84,7 @@ export async function POST(req) {
       payment_method_types: ['card'],
       line_items: [{ price: planConfig.priceId, quantity: 1 }],
       mode: planConfig.mode,
+      allow_promotion_codes: true,
       success_url: `${baseUrl}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/planos`,
       customer_email: user.email,

@@ -151,9 +151,9 @@ export default function PlanosPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid gap-8 max-w-5xl mx-auto md:grid-cols-2 lg:grid-cols-3">
           {/* Plano Mensal */}
-          <div className="bg-[#121218] border border-gray-800 rounded-3xl p-8 relative flex flex-col hover:border-gray-700 transition-colors">
+          <div className="order-2 lg:order-1 bg-[#121218] border border-gray-800 rounded-3xl p-8 relative flex flex-col hover:border-gray-700 transition-colors">
             <div className="absolute -top-3 left-8 bg-gray-700 text-white text-xs font-bold px-3 py-1 rounded-full">
               Mais Flexível
             </div>
@@ -188,8 +188,56 @@ export default function PlanosPage() {
             </button>
           </div>
 
+          {/* Plano Vitalício (Destaque) */}
+          <div className="order-1 md:col-span-2 lg:col-span-1 lg:order-2 relative rounded-3xl p-[2px] bg-gradient-to-br from-indigo-500/70 via-fuchsia-500/40 to-indigo-500/10 shadow-[0_0_50px_-18px_rgba(99,102,241,0.75)]">
+            <div className="bg-[#0f0f16] rounded-3xl p-8 relative overflow-hidden flex flex-col h-full">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-sm font-extrabold px-4 py-1.5 rounded-full shadow-lg shadow-indigo-500/30">
+                Melhor Custo-Benefício
+              </div>
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-indigo-500/10 via-transparent to-transparent" />
+
+              <div className="mb-6 relative">
+                <div className="flex items-center gap-2">
+                  <Crown className="text-indigo-300" size={22} />
+                  <h3 className="text-2xl font-extrabold">Vitalício</h3>
+                </div>
+                <p className="text-gray-300 mt-2">
+                  Pagamento único. Acesso para sempre.
+                </p>
+              </div>
+
+              <div className="flex items-baseline gap-2 mb-6 relative">
+                <span className="text-5xl font-extrabold">{formatBRL(pricing.vitalicio) || 'R$ 297,00'}</span>
+                <span className="text-gray-400">pagamento único</span>
+              </div>
+
+              <ul className="space-y-3 text-gray-200 text-sm flex-1 relative">
+                {[
+                  'Acesso vitalício ao CLT Rico Premium',
+                  'Atualizações inclusas',
+                  'Sem mensalidade',
+                  'Suporte prioritário',
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-3">
+                    <CheckCircle2 size={18} className="text-indigo-300" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => handleSubscribe('vitalicio')}
+                disabled={!!loading}
+                className="mt-8 w-full py-4 rounded-xl font-extrabold bg-indigo-500 hover:bg-indigo-600 text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {(loading === 'vitalicio' || (pricesLoading && !priceInfo.vitalicio)) && <Loader2 className="animate-spin" />}
+                Comprar Vitalício
+              </button>
+            </div>
+          </div>
+
           {/* Plano Anual */}
-          <div className="bg-[#121218] border-2 border-[#f59e0b] rounded-3xl p-8 relative flex flex-col shadow-[0_0_30px_-10px_rgba(245,158,11,0.3)]">
+          <div className="order-3 lg:order-3 bg-[#121218] border border-[#f59e0b]/40 rounded-3xl p-8 relative flex flex-col hover:border-[#f59e0b]/60 transition-colors">
             <div className="absolute -top-3 left-8 bg-[#f59e0b] text-black text-xs font-bold px-3 py-1 rounded-full">
               Economize 16%
             </div>
@@ -233,54 +281,6 @@ export default function PlanosPage() {
               {(loading === 'anual' || (pricesLoading && !priceInfo.anual)) && <Loader2 className="animate-spin" />}
               Assinar Anual
             </button>
-          </div>
-        </div>
-
-        <div className="max-w-4xl mx-auto mt-8">
-          <div className="bg-[#121218] border border-indigo-500/40 rounded-3xl p-8 relative overflow-hidden">
-            <div className="absolute -top-3 left-8 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-              Melhor Custo-Benefício
-            </div>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Crown className="text-indigo-400" size={22} />
-                  <h3 className="text-2xl font-bold">Vitalício</h3>
-                </div>
-                <p className="text-gray-400">
-                  Pagamento único. Acesso para sempre.
-                </p>
-                <ul className="space-y-2 text-gray-300 text-sm">
-                  {[
-                    'Acesso vitalício ao CLT Rico Premium',
-                    'Atualizações inclusas',
-                    'Sem mensalidade',
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-3">
-                      <CheckCircle2 size={18} className="text-indigo-400" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="flex flex-col items-stretch gap-3 md:w-[280px]">
-                <div className="text-center">
-                  <div className="text-4xl font-extrabold">
-                    {formatBRL(pricing.vitalicio) || 'R$ 297,00'}
-                  </div>
-                  <div className="text-sm text-gray-500">pagamento único</div>
-                </div>
-                <button
-                  onClick={() => handleSubscribe('vitalicio')}
-                  disabled={!!loading}
-                  className="w-full py-4 rounded-xl font-bold bg-indigo-500 hover:bg-indigo-600 text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {(loading === 'vitalicio' || (pricesLoading && !priceInfo.vitalicio)) && <Loader2 className="animate-spin" />}
-                  Comprar Vitalício
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
